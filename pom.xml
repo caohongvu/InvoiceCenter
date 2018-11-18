@@ -25,6 +25,9 @@
 	<modules>
         <module>../PaymentCenter/cis-common</module>
         <module>../PaymentCenter/cis-thirdparty</module>
+        <module>invoice-entity</module>
+        <module>invoice-application</module>
+        <module>invoice-apis</module>
     </modules>
 
 	<dependencyManagement>
