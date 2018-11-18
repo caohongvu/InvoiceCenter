@@ -27,7 +27,7 @@
     </bean>
 
     <!-- Entity Manager Factory -->
-    <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean" depends-on="invoiceCenter">
+    <bean id="invoiceEntityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean" depends-on="invoiceCenter">
         <property name="dataSource" ref="invoiceCenter"/>
         <property name="jpaVendorAdapter" ref="jpaVendorAdapter"/>
         <property name="jpaProperties">
@@ -43,7 +43,7 @@
 
     <!-- Define Transaction Manager -->
     <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
-        <property name="entityManagerFactory" ref="entityManagerFactory"/>
+        <property name="entityManagerFactory" ref="invoiceEntityManagerFactory"/>
     </bean>
 
     <!-- Enable Transactional Manner -->
