@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>net.cis</groupId>
+	<artifactId>invoice-parent</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<name>net.cis 1.0</name>
+	<description>Maven main project for net.cis Engine</description>
+
+	<properties>
+		<maven.compiler.plugin.version>3.3.9</maven.compiler.plugin.version>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<java.version>1.8</java.version>
+        <!--<spring.security.version>4.0.4.RELEASE</spring.security.version>-->
+        <spring.security.version>3.2.9.RELEASE</spring.security.version>
+        <spring.integration.version>4.2.5.RELEASE</spring.integration.version>
+	</properties>
+	
+	<modules>
+        <module>../PaymentCenter/cis-common</module>
+        <module>../PaymentCenter/cis-thirdparty</module>
+    </modules>
+
+	<dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-framework-bom</artifactId>
+                <version>4.2.5.RELEASE</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+	
+</project>
