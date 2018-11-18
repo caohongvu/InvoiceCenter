@@ -34,16 +34,16 @@ xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns
     <filter-name>CORSFilter</filter-name>
     <url-pattern>/*</url-pattern>
   </filter-mapping>
-<!--   <filter>
-    <filter-name>springSecurityFilterChain</filter-name>
-    <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
-    <init-param>
-      <param-name>contextAttribute</param-name>
-      <param-value>org.springframework.web.servlet.FrameworkServlet.CONTEXT.mvc-dispatcher</param-value>
-    </init-param>
-  </filter>
-  <filter-mapping>
-    <filter-name>springSecurityFilterChain</filter-name>
-    <url-pattern>/*</url-pattern>
-  </filter-mapping> -->
+<!--   <filter> -->
+<!-- 	    <filter-name>springSecurityFilterChain</filter-name> -->
+<!-- 	    <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class> -->
+<!-- 	    <init-param> -->
+<!-- 	      <param-name>contextAttribute</param-name> -->
+<!-- 	      <param-value>org.springframework.web.servlet.FrameworkServlet.CONTEXT.mvc-dispatcher</param-value> -->
+<!-- 	    </init-param> -->
+<!--   </filter> -->
+<!--   <filter-mapping> -->
+<!-- 	    <filter-name>springSecurityFilterChain</filter-name> -->
+<!-- 	    <url-pattern>/*</url-pattern> -->
+<!--   </filter-mapping> -->
 </web-app>

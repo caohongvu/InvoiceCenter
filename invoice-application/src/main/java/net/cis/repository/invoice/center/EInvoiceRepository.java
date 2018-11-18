@@ -10,7 +10,6 @@ import net.cis.jpa.entity.EInvoiceEntity;
 /**
  * Created by NhanNguyen 19/10/2018
  */
-
 public interface EInvoiceRepository  extends JpaRepository<EInvoiceEntity, Long> {
 	
 	EInvoiceEntity findById(long id);
