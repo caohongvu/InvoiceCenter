@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context path="/invoice-apis">
+    <ResourceLink name="springProfilesActive" global="payment/cdSpringProfilesActive" type="java.lang.String"/>
+</Context>
