@@ -15,6 +15,7 @@
         http://www.springframework.org/schema/tx/spring-tx.xsd" >
 
     <tx:annotation-driven/>
+    
     <context:component-scan base-package="net.cis.controller"/>
 
     <mvc:annotation-driven content-negotiation-manager="contentNegotiationManager">
