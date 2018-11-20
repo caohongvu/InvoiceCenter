@@ -425,8 +425,8 @@ public class InvoiceServiceImpl implements InvoiceService {
 		
 		for (PaymentConfig item : paymentConfigs) {
 			InvoiceDetailsWS invoiceDetailsWS = new InvoiceDetailsWS();
-			double price = BkavInvoiceUtil.calculatePriceBeforeTax(item.getPrice());
-			double amount = BkavInvoiceUtil.calculateAmount(price, 1);
+			int price = BkavInvoiceUtil.calculatePriceBeforeTax(item.getPrice());
+			int amount = BkavInvoiceUtil.calculateAmount(price, 1);
 			invoiceDetailsWS.setQty(1);
 			invoiceDetailsWS.setAmount(amount);
 			invoiceDetailsWS.setPrice(price);
