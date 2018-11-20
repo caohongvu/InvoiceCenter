@@ -12,7 +12,7 @@
 	<artifactId>invoice-application</artifactId>
 	<packaging>jar</packaging>
 
-	<name>nfc-application</name>
+	<name>invoice-application</name>
 	<description>Application Layer for net.cis Engine</description>
 
 	<properties>
@@ -32,6 +32,7 @@
             <groupId>net.cis</groupId>
 			<artifactId>invoice-entity</artifactId>
             <version>${project.version}</version>
+            <scope>compile</scope>
         </dependency>
 
 		<dependency>
