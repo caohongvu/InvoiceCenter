@@ -635,7 +635,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		} else {
 			invoice.setReceiveTypeID(ReceiveInvoiceTypeConstant.RECEIVE_BY_SMS);
 		}
-		
+		System.out.println("Invoice Here: " + invoice.toString());
 		return invoice;
 	}
 

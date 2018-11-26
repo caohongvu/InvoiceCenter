@@ -56,7 +56,11 @@ public class CisInvoiceEndpoint extends BaseEndpoint {
 		// Call BKAV to create Invoice
 		BkavResult bkavResult = new BkavResult();	
 		bkavResult = invoiceService.createInvoice(bkavTicketDto);
-	
+		
+		if (bkavResult.getStatus() == 1) {
+			response.setError(new ResponseError(HttpServletResponse.SC_BAD_REQUEST, bkavResult.getResult().toString()));
+			return response;
+		}
 		// Update Invoice GUID for ticket
 		@SuppressWarnings("unchecked")
 		List<BkavSuccess> list = (List<BkavSuccess>) bkavResult.getResult();

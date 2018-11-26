@@ -91,7 +91,7 @@ public class EncryptionServiceImpl implements EncryptionService {
 		Cipher cipher = Cipher.getInstance(BkavConfigurationConstant.CIS_BKAV_ALGORITHM);
 		cipher.init(Cipher.DECRYPT_MODE, key, ivParameterSpec);
 
-		byte[] decodedValue = Base64.getDecoder().decode(strEncryted);
+		byte[] decodedValue = Base64.getDecoder().decode(strEncryted.trim());
 		byte[] byteDecrypted = cipher.doFinal(decodedValue);
 
 		// Unzip Object CommandData
