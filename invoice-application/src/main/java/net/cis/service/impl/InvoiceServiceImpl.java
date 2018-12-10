@@ -25,7 +25,6 @@ import net.cis.bkav.entity.BkavResult;
 import net.cis.bkav.entity.BkavSuccess;
 import net.cis.bkav.entity.CommandDataEntity;
 import net.cis.bkav.entity.CommandObject;
-import net.cis.bkav.entity.Company;
 import net.cis.bkav.entity.Invoice;
 import net.cis.bkav.entity.InvoiceAttachFileWS;
 import net.cis.bkav.entity.InvoiceDetail;
@@ -40,6 +39,7 @@ import net.cis.common.util.constant.BkavTaxRateConstant;
 import net.cis.common.util.constant.InvoiceCmdType;
 import net.cis.common.util.constant.ReceiveInvoiceTypeConstant;
 import net.cis.dto.BkavTicketDto;
+import net.cis.dto.CompanyInforDto;
 import net.cis.jpa.entity.CompanyKeyEntity;
 import net.cis.jpa.entity.EInvoiceEntity;
 import net.cis.jpa.entity.PaymentConfig;
@@ -367,18 +367,19 @@ public class InvoiceServiceImpl implements InvoiceService {
 		return bkavResult;
 	}
 	
-	// Chua chay duoc
 	@Override
-	public BkavResult getCompanyInformationByTaxCode(String taxCode) throws Exception {
+	public CompanyInforDto getCompanyInformationByTaxCode(String taxCode, long provideId) throws Exception {
+		CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(provideId);	
+	 	String partnerToken = companyKeyEntity.getPartnerToken();
 		// Prepare Command Data
 		CommandDataEntity commandDataEntity = prepareDataForGettingCompanyInformationByTaxCode(taxCode);
 		
 		// Encrypted Command Data
-		String encryptedCommandData = encryptionService.doEncryptedCommandData(commandDataEntity, "");
+		String encryptedCommandData = encryptionService.doEncryptedCommandData(commandDataEntity, partnerToken);
 		
 		// Call BKAV Third Party 
 		BkavRequest bkavRequest = new BkavRequest();
-		bkavRequest.setPartnerGUID("");
+		bkavRequest.setPartnerGUID(companyKeyEntity.getPartnerGuid());
 		bkavRequest.setCommandData(encryptedCommandData);
 		
 		BkavResponse bkavResponse = new BkavResponse();
@@ -386,36 +387,30 @@ public class InvoiceServiceImpl implements InvoiceService {
 		
 		// Receive Response and Decrypted Response Data
 		String decryptedResult = bkavResponse.getDecryptedResult();
-		String result = encryptionService.doDecryptedCommamdData(decryptedResult, "");
-		System.out.println(result);
+		String result = encryptionService.doDecryptedCommamdData(decryptedResult, partnerToken);
 		
 		// Parse to Object
 		JSONObject jsonObject = new JSONObject(result);
-
 		int status = (int) jsonObject.get("Status");
 		boolean isOk = jsonObject.getBoolean("isOk");
 		boolean isError = jsonObject.getBoolean("isError");
 		
-		BkavResult bkavResult = new BkavResult();
-		bkavResult.setIsError(isError);
-		bkavResult.setStatus(status);
-		bkavResult.setIsOk(isOk);
 		String strObject = jsonObject.get("Object").toString();
 		if (status == 0 && isOk == true && isError == false) {
 			// Parse result to Company Object
 			JSONObject jsonCompany = new JSONObject(strObject);
-			Company company = new Company();
-			company.setAlternativeAddress(jsonCompany.getString("DiaChiGiaoDichPhu"));
-			company.setCompanyName(jsonCompany.getString("TenChinhThuc"));
-			company.setOperationStatus(jsonCompany.getString("TrangThaiHoatDong"));
-			company.setPrimaryAddress(jsonCompany.getString("DiaChiGiaoDichChinh"));
-			company.setTaxCode(jsonCompany.getString("MaSoThue"));
 			
-			bkavResult.setResult(company);
-		} else {
-			bkavResult.setResult(strObject);
+			CompanyInforDto companyInforDto = new CompanyInforDto();
+			companyInforDto.setAlternativeAddress(jsonCompany.getString("DiaChiGiaoDichPhu"));
+			companyInforDto.setCompanyName(jsonCompany.getString("TenChinhThuc"));
+			companyInforDto.setOperationStatus(jsonCompany.getString("TrangThaiHoatDong"));
+			companyInforDto.setPrimaryAddress(jsonCompany.getString("DiaChiGiaoDichChinh"));
+			companyInforDto.setTaxCode(jsonCompany.getString("MaSoThue"));
+			
+			return companyInforDto;
 		}
-		return bkavResult;
+		
+		return null;
 	}
 	
 	public static List<InvoiceDetailsWS> prepareListInvoiceDetailsWS(BkavTicketDto bkavTicketDto) {

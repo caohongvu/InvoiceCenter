@@ -11,6 +11,7 @@ import net.cis.bkav.entity.InvoiceAttachFileWS;
 import net.cis.bkav.entity.InvoiceDetail;
 import net.cis.bkav.entity.InvoiceDetailsWSResult;
 import net.cis.dto.BkavTicketDto;
+import net.cis.dto.CompanyInforDto;
 
 /**
  * Created by NhanNguyen 19/10/2018
@@ -25,7 +26,7 @@ public interface InvoiceService {
     
     BkavResult getInvoiceHistory(String invoiceGUID) throws Exception;
     
-    BkavResult getCompanyInformationByTaxCode(String taxCode) throws Exception;
+    CompanyInforDto getCompanyInformationByTaxCode(String taxCode, long providerId) throws Exception;
     
     CommandDataEntity prepareDataForCreatingInvoice(BkavTicketDto bkavTicketDto) throws JsonProcessingException;
     

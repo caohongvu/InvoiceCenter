@@ -22,6 +22,7 @@ import net.cis.common.util.constant.BkavConfigurationConstant;
 import net.cis.common.web.BaseEndpoint;
 import net.cis.common.web.ResponseError;
 import net.cis.dto.BkavTicketDto;
+import net.cis.dto.CompanyInforDto;
 import net.cis.dto.EInvoiceDto;
 import net.cis.dto.ResponseDto;
 import net.cis.jpa.entity.EInvoiceEntity;
@@ -59,6 +60,7 @@ public class CisInvoiceEndpoint extends BaseEndpoint {
 		
 		if (bkavResult.getStatus() == 1) {
 			response.setError(new ResponseError(HttpServletResponse.SC_BAD_REQUEST, bkavResult.getResult().toString()));
+			System.out.println(bkavResult.getResult().toString());
 			return response;
 		}
 		// Update Invoice GUID for ticket
@@ -128,12 +130,20 @@ public class CisInvoiceEndpoint extends BaseEndpoint {
 	
 	@RequestMapping(value = "/company_infor/by_tax_code", method = { RequestMethod.GET })
 	@ResponseBody
-	public BkavResult getCompanyByTaxCode(HttpServletRequest request, @RequestParam("tax_code") String taxCode) throws Exception {
+	public ResponseDto getCompanyByTaxCode(HttpServletRequest request, @RequestParam("tax_code") String taxCode, @RequestParam("provider_id") long providerId) throws Exception {
+		ResponseDto responseDto = new ResponseDto();
 		
-		BkavResult bkavResult = new BkavResult();
-		bkavResult = invoiceService.getCompanyInformationByTaxCode(taxCode);
+		CompanyInforDto companyInforDto = invoiceService.getCompanyInformationByTaxCode(taxCode, providerId);
+		if (companyInforDto == null) {
+			responseDto.setData("");
+			responseDto.setError(new ResponseError(HttpServletResponse.SC_OK, "Không tìm thấy công ty với MST " + taxCode));
+			return responseDto;
+		}
 		
-		return bkavResult;
+		responseDto.setData(companyInforDto);
+		responseDto.setError(new ResponseError(HttpServletResponse.SC_OK, ""));
+		
+		return responseDto;
 	}
 	
 	@RequestMapping(value = "/list/", method = { RequestMethod.GET })
