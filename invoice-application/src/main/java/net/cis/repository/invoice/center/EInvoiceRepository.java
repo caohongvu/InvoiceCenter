@@ -2,8 +2,9 @@ package net.cis.repository.invoice.center;
 
 
 import java.util.List;
-
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import net.cis.jpa.entity.EInvoiceEntity;
 
@@ -17,5 +18,9 @@ public interface EInvoiceRepository  extends JpaRepository<EInvoiceEntity, Long>
 	EInvoiceEntity findByInvoiceGUID(String invoiceGUID);
 	
 	List<EInvoiceEntity> findByTicketId(String ticketId);
+	
+	@Query(nativeQuery = true, value = "SELECT * from invoice_center.e_invoice where provider_id = :providerId order by invoice_no desc limit 0, 1")
+	EInvoiceEntity findTopByProviderIdOrderByInvoiceNoDesc(@Param("providerId") int providerId);
 
+	List<EInvoiceEntity> findByInvoiceStatus(int status);
 }

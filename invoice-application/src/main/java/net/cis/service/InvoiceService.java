@@ -18,7 +18,11 @@ import net.cis.dto.CompanyInforDto;
  */
 public interface InvoiceService {
     
-    BkavResult createInvoice(BkavTicketDto bkavTicketDto) throws Exception;
+	String createInvoice(BkavTicketDto bkavTicketDto) throws Exception;
+    
+    BkavResult reCreateInvoice(BkavTicketDto bkavTicketDto) throws Exception;
+    
+    BkavResult cancelInvoice(String invoiceGUID) throws Exception;
     
     BkavResult getInvoiceDetail(String invoiceGUID) throws Exception;
     
@@ -35,6 +39,8 @@ public interface InvoiceService {
     CommandDataEntity prepareDataForGettingInvoiceStatus(String invoiceGUID);
     
     CommandDataEntity prepareDataForGettingInvoiceHistory(String invoiceGUID);
+    
+    CommandDataEntity prepareDataForCancelingInvoice(String invoiceGUID);
     
     CommandDataEntity prepareDataForGettingCompanyInformationByTaxCode(String taxCode);
     

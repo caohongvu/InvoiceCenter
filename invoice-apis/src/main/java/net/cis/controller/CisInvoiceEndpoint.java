@@ -50,26 +50,43 @@ public class CisInvoiceEndpoint extends BaseEndpoint {
 	@RequestMapping(value = "/create", method = RequestMethod.POST) 
 	@ResponseBody
 	public ResponseDto createInvoice(HttpServletRequest request, @RequestBody BkavTicketDto bkavTicketDto) throws Exception {
-		// Create eInvoice data
-	 	long id = eInvoiceService.createEInvoice(bkavTicketDto);
 	 	ResponseDto response = new ResponseDto();
 
-		// Call BKAV to create Invoice
+		String invoiceCode = invoiceService.createInvoice(bkavTicketDto);		
+		if (invoiceCode == "") {
+			response.setError(new ResponseError(HttpServletResponse.SC_BAD_REQUEST, "Failed"));
+			response.setData("");
+		} else {
+			response.setError(new ResponseError(HttpServletResponse.SC_OK, "Created"));
+			response.setData(invoiceCode);
+		}
+		
+		return response;
+	}
+	
+	@RequestMapping(value = "/cancel", method = RequestMethod.POST) 
+	@ResponseBody
+	public ResponseDto cancelInvoice(HttpServletRequest request, @RequestParam("invoiceGUID") String invoiceGUID) throws Exception {
+		ResponseDto response = new ResponseDto();
+		
+		// Call BKAV to cancel Invoice
 		BkavResult bkavResult = new BkavResult();	
-		bkavResult = invoiceService.createInvoice(bkavTicketDto);
+		bkavResult = invoiceService.cancelInvoice(invoiceGUID);
 		
 		if (bkavResult.getStatus() == 1) {
 			response.setError(new ResponseError(HttpServletResponse.SC_BAD_REQUEST, bkavResult.getResult().toString()));
-			System.out.println(bkavResult.getResult().toString());
 			return response;
 		}
+		
 		// Update Invoice GUID for ticket
 		@SuppressWarnings("unchecked")
 		List<BkavSuccess> list = (List<BkavSuccess>) bkavResult.getResult();
+		EInvoiceEntity eInvoice = eInvoiceService.getByInvoiceGUID(invoiceGUID);
 		for (BkavSuccess item : list) {
-			eInvoiceService.updateEInvoice(id, item.getStatus(), item.getInvoiceGUID(), item.getInvoiceCode());
+			eInvoiceService.updateEInvoiceStatus(eInvoice.getId(), item.getStatus());
 			response.setData(item.getInvoiceCode());
 		}
+		
 		response.setError(new ResponseError(HttpServletResponse.SC_OK, ""));
 		return response;
 	}
@@ -199,4 +216,5 @@ public class CisInvoiceEndpoint extends BaseEndpoint {
 		
 		return response;
 	}
+	
 }
