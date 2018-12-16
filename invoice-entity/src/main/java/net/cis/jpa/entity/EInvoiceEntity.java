@@ -64,10 +64,6 @@ public class EInvoiceEntity {
 	@Column(name = "invoice_code")
 	private String invoiceCode;
 	
-	@JsonProperty("InvoiceCode")
-	@Column(name = "invoice_no")
-	private int invoiceNo;
-	
 	@JsonProperty("RequestBody")
 	@Column(name = "request_body")
 	private String requestBody;
@@ -154,14 +150,6 @@ public class EInvoiceEntity {
 
 	public void setInvoiceCode(String invoiceCode) {
 		this.invoiceCode = invoiceCode;
-	}
-
-	public int getInvoiceNo() {
-		return invoiceNo;
-	}
-
-	public void setInvoiceNo(int invoiceNo) {
-		this.invoiceNo = invoiceNo;
 	}
 
 	public String getRequestBody() {

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 
 import net.cis.bkav.BkavExecCommand;
 import net.cis.bkav.entity.BkavRequest;
@@ -111,7 +112,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
 				ObjectMapper mapper = new ObjectMapper();
 				String requestBody = mapper.writeValueAsString(commandDataEntity);
-				eInvoiceService.updateEInvoice(id, status, successObject.getString("InvoiceGUID"), successObject.getString("MTC"), successObject.getInt("InvoiceNo"), requestBody, strObject);
+				eInvoiceService.updateEInvoice(id, status, successObject.getString("InvoiceGUID"), successObject.getString("MTC"), requestBody, strObject);
 				
 				invoiceCode = successObject.getString("MTC");
 			}
@@ -476,13 +477,6 @@ public class InvoiceServiceImpl implements InvoiceService {
 	public static List<InvoiceAttachFileWS> prepareInvoiceAttachFileWS() {
 		List<InvoiceAttachFileWS> listInvoiceAttachFileWS = new ArrayList<InvoiceAttachFileWS>();
 		
-//		InvoiceAttachFileWS invoiceAttachFileWS = new InvoiceAttachFileWS();
-//		invoiceAttachFileWS.setFileContent("");
-//		invoiceAttachFileWS.setFileExtension(BkavAttachFileConstant.DOCX_EXTENSION);
-//		invoiceAttachFileWS.setFileName("Test");
-//		
-//		listInvoiceAttachFileWS.add(invoiceAttachFileWS);
-		
 		return listInvoiceAttachFileWS;
 	}
 
@@ -660,9 +654,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		
 		invoice.setInvoiceDate(str);
 		invoice.setInvoiceForm(BkavConfigurationConstant.INVOICE_FORM);
-
-		int invoiceNo = eInvoiceService.getInvoiceNo(bkavTicketDto.getProviderId());
-		invoice.setInvoiceNo(invoiceNo);
+		invoice.setInvoiceNo(0);
 		
 		invoice.setInvoiceSerial(BkavConfigurationConstant.INVOICE_SERIAL);
 		invoice.setInvoiceTypeID(BkavConfigurationConstant.INVOICE_TYPE_ID);
@@ -683,10 +675,58 @@ public class InvoiceServiceImpl implements InvoiceService {
 	}
 
 	@Override
-	public BkavResult reCreateInvoice(BkavTicketDto bkavTicketDto) throws Exception {
+	public void handleFailedInvoice() throws Exception {
+		List<EInvoiceEntity> eInvoices = eInvoiceService.getInvoiceFailed();
 		
+		for (EInvoiceEntity eInvoice : eInvoices) {
+			boolean isReCreated = reCreateInvoice(eInvoice);
+			if (isReCreated == false) {
+				eInvoiceService.updateEInvoiceStatus(eInvoice.getId(), BkavConfigurationConstant.INVOICE_STATUS_RECREATED_FAILED);
+			}
+		}
 		
-		return null;
 	}
-
+	
+	@Override
+	public boolean reCreateInvoice(EInvoiceEntity eInvoice) throws Exception {
+		boolean isCreated = false;
+		CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(eInvoice.getProviderId());
+		
+		Gson gson = new Gson();
+		CommandDataEntity commandDataEntity = gson.fromJson(eInvoice.getRequestBody(), CommandDataEntity.class);
+	 	
+	 	String encryptedCommandData = encryptionService.doEncryptedCommandData(commandDataEntity, companyKeyEntity.getPartnerToken());
+		
+		BkavRequest bkavRequest = new BkavRequest();
+		bkavRequest.setPartnerGUID(companyKeyEntity.getPartnerGuid());
+		bkavRequest.setCommandData(encryptedCommandData);
+		
+		// Call BKAV Third Party 
+		BkavResponse bkavResponse = new BkavResponse();
+		bkavResponse = bkavExecCommand.doExecCommand(bkavRequest);
+	
+		String decryptedResult = bkavResponse.getDecryptedResult();
+		String result = encryptionService.doDecryptedCommamdData(decryptedResult, companyKeyEntity.getPartnerToken());
+		System.out.println(result);
+		
+		// Parse to Object
+		JSONObject jsonObject = new JSONObject(result);
+		
+		int status = (int) jsonObject.get("Status");
+		boolean isOk = jsonObject.getBoolean("isOk");
+		boolean isError = jsonObject.getBoolean("isError");
+		
+		String strObject = jsonObject.get("Object").toString();
+		if (status == 0 && isOk == true && isError == false) {
+			JSONArray jsonArray = new JSONArray(strObject);
+			for (int i = 0; i < jsonArray.length(); i++) {
+				JSONObject successObject = jsonArray.getJSONObject(i);
+				eInvoiceService.updateEInvoice(eInvoice.getId(), status, successObject.getString("InvoiceGUID"), successObject.getString("MTC"), eInvoice.getRequestBody(), strObject);
+				
+				isCreated = true;
+			}
+		} 
+		
+		return isCreated;
+	}
 }

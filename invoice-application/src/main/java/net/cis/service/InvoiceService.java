@@ -12,6 +12,7 @@ import net.cis.bkav.entity.InvoiceDetail;
 import net.cis.bkav.entity.InvoiceDetailsWSResult;
 import net.cis.dto.BkavTicketDto;
 import net.cis.dto.CompanyInforDto;
+import net.cis.jpa.entity.EInvoiceEntity;
 
 /**
  * Created by NhanNguyen 19/10/2018
@@ -19,8 +20,10 @@ import net.cis.dto.CompanyInforDto;
 public interface InvoiceService {
     
 	String createInvoice(BkavTicketDto bkavTicketDto) throws Exception;
-    
-    BkavResult reCreateInvoice(BkavTicketDto bkavTicketDto) throws Exception;
+	
+	boolean reCreateInvoice(EInvoiceEntity eInvoice) throws Exception;
+	
+	void handleFailedInvoice() throws Exception;
     
     BkavResult cancelInvoice(String invoiceGUID) throws Exception;
     

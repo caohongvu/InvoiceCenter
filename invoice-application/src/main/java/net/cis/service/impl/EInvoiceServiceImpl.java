@@ -61,12 +61,11 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 	}
 
 	@Override
-	public void updateEInvoice(long id, int invoiceStatus, String invoiceGUID, String invoiceCode, int invoiceNo, String requestBody, String responseBody) {
+	public void updateEInvoice(long id, int invoiceStatus, String invoiceGUID, String invoiceCode, String requestBody, String responseBody) {
 		EInvoiceEntity eInvoice = eInvoiceRepository.findById(id);
 		eInvoice.setInvoiceStatus(invoiceStatus);
 		eInvoice.setInvoiceGUID(invoiceGUID);
 		eInvoice.setInvoiceCode(invoiceCode);
-		eInvoice.setInvoiceNo(invoiceNo);
 		eInvoice.setRequestBody(requestBody);
 		eInvoice.setResponseBody(responseBody);
 		
@@ -92,23 +91,9 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 		
 	}
 
-	@Override
-	public int getInvoiceNo(int providerId) {
-		int invoiceNo = 0;
-		
-		EInvoiceEntity eInvoice = eInvoiceRepository.findTopByProviderIdOrderByInvoiceNoDesc(providerId);
-		
-		if(eInvoice != null) {
-			invoiceNo = eInvoice.getInvoiceNo() + 1;
-		} else {
-			invoiceNo = invoiceNo + 1;
-		}
-		
-		return invoiceNo;
-	}
 
 	@Override
-	public List<EInvoiceEntity> getInvoiceFailed(int time) {
+	public List<EInvoiceEntity> getInvoiceFailed() {
 		List<EInvoiceEntity> eInvoices = eInvoiceRepository.findByInvoiceStatus(BkavConfigurationConstant.INVOICE_STATUS_FAILED);
 		return eInvoices;
 	}
