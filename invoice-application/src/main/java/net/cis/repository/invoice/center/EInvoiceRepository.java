@@ -17,5 +17,7 @@ public interface EInvoiceRepository  extends JpaRepository<EInvoiceEntity, Long>
 	EInvoiceEntity findByInvoiceGUID(String invoiceGUID);
 	
 	List<EInvoiceEntity> findByTicketId(String ticketId);
+	
+	List<EInvoiceEntity> findByInvoiceStatus(int status);
 
 }
