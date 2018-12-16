@@ -1,15 +1,13 @@
 package net.cis.dto;
 
 
-import javax.persistence.Entity;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 
 /**
  * Created by NhanNguyen on 02/10/2018
  */
-@Entity
+
 public class EInvoiceDto {
 	
 	@JsonProperty("TicketId")

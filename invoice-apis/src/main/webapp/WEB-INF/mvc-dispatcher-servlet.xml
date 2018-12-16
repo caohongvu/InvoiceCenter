@@ -46,6 +46,22 @@
         <property name="defaultEncoding" value="UTF-8"/>
     </bean>
 
+	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+	    <!-- SMTP settings -->
+	    <property name="host" value="smtp.gmail.com" />
+	    <property name="port" value="465" />
+	    <property name="username" value="automailer@cis.net.vn" />
+	    <property name="password" value="Book123@" />
+		<property name="javaMailProperties">
+		<props>
+			<prop key="mail.transport.protocol">smtp</prop>
+				<prop key="mail.smtp.auth">true</prop>
+				<prop key="mail.smtp.starttls.enable">true</prop>
+			</props>
+	    </property>
+	</bean>
+	
+
     <mvc:default-servlet-handler/>
 
    

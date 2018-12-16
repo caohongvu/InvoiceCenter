@@ -21,6 +21,7 @@ public interface EInvoiceRepository  extends JpaRepository<EInvoiceEntity, Long>
 	
 	@Query(nativeQuery = true, value = "SELECT * from invoice_center.e_invoice where provider_id = :providerId order by invoice_no desc limit 0, 1")
 	EInvoiceEntity findTopByProviderIdOrderByInvoiceNoDesc(@Param("providerId") int providerId);
-
+	
 	List<EInvoiceEntity> findByInvoiceStatus(int status);
+
 }
