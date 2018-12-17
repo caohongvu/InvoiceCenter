@@ -19,7 +19,6 @@ import net.cis.bkav.entity.BkavResult;
 import net.cis.bkav.entity.BkavSuccess;
 import net.cis.bkav.entity.InvoiceSearchResult;
 import net.cis.common.util.constant.BkavConfigurationConstant;
-import net.cis.common.web.BaseEndpoint;
 import net.cis.common.web.ResponseError;
 import net.cis.dto.BkavTicketDto;
 import net.cis.dto.CompanyInforDto;
@@ -36,7 +35,7 @@ import net.cis.service.InvoiceService;
 @RestController
 @RequestMapping("/e_invoices")
 @Api(value = "Invoice API Endpoint", description = "Invoice Data Entities Endpoint")
-public class CisInvoiceEndpoint extends BaseEndpoint {
+public class CisInvoiceEndpoint {
 
 	@Autowired
 	InvoiceService invoiceService;

@@ -72,6 +72,10 @@ public class EInvoiceEntity {
 	@Column(name = "response_body")
 	private String responseBody;
 	
+	@JsonProperty("PartnerInvoiceStringId")
+	@Column(name = "partner_invoice_string_id")
+	private String partnerInvoiceStringId;
+	
 	public long getId() {
 		return id;
 	}
@@ -174,6 +178,14 @@ public class EInvoiceEntity {
 
 	public void setResponseBody(String responseBody) {
 		this.responseBody = responseBody;
+	}
+
+	public String getPartnerInvoiceStringId() {
+		return partnerInvoiceStringId;
+	}
+
+	public void setPartnerInvoiceStringId(String partnerInvoiceStringId) {
+		this.partnerInvoiceStringId = partnerInvoiceStringId;
 	}
 	
 	

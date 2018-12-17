@@ -2,6 +2,8 @@ package net.cis.dto;
 
 import java.util.List;
 
+import javax.persistence.Column;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import net.cis.jpa.entity.PaymentConfig;
@@ -61,6 +63,10 @@ public class BkavTicketDto {
 	
 	@JsonProperty("PaymentConfiguration")
 	private List<PaymentConfig> paymentConfiguration;
+	
+	@JsonProperty("PartnerInvoiceStringId")
+	@Column(name = "partner_invoice_string_id")
+	private String partnerInvoiceStringId;
 	
 	public String getBuyerName() {
 		return buyerName;
@@ -164,6 +170,14 @@ public class BkavTicketDto {
 	public void setIsMonthly(int isMonthly) {
 		this.isMonthly = isMonthly;
 	}
+	public String getPartnerInvoiceStringId() {
+		return partnerInvoiceStringId;
+	}
+
+	public void setPartnerInvoiceStringId(String partnerInvoiceStringId) {
+		this.partnerInvoiceStringId = partnerInvoiceStringId;
+	}
+	
 	
 	
 }

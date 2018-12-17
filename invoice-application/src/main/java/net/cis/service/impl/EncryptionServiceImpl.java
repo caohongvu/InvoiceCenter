@@ -84,6 +84,35 @@ public class EncryptionServiceImpl implements EncryptionService {
 	}
 
 	@Override
+	public String doEncryptedRequestBody(String requestBody, String partnerToken) throws Exception {
+		Map<String, String> keyMap = BkavInvoiceUtil.parseTokenToKeyAndIvy(partnerToken);
+
+		String key_token = new String(keyMap.get("KEY").getBytes("windows-1252"), StandardCharsets.UTF_8);
+		String ivy_token = new String(keyMap.get("IVY").getBytes("windows-1252"), StandardCharsets.UTF_8);
+
+		String decodedKey = decodeBase64(key_token);
+		String decodedIvy = decodeBase64(ivy_token);
+
+		Key key = generateKey(decodedKey);
+		IvParameterSpec ivParameterSpec = generateIvParameterSpec(decodedIvy);
+
+		decodeKey = key;
+		decodeIvy = ivParameterSpec;
+
+		Cipher cipher = Cipher.getInstance(BkavConfigurationConstant.CIS_BKAV_ALGORITHM);
+		cipher.init(Cipher.ENCRYPT_MODE, key, ivParameterSpec);
+
+		// Zip Object CommandData
+		byte[] zipCommandData = compressionService.compress(requestBody);
+
+		byte[] byteEncrypted = cipher.doFinal(zipCommandData);
+		String encrypted = Base64.getEncoder().encodeToString(byteEncrypted);
+
+		return encrypted;
+	}
+
+	
+	@Override
 	public String doDecryptedCommamdData(String strEncryted, String partnerToken) throws Exception {
 		Key key = decodeKey;
 		IvParameterSpec ivParameterSpec = decodeIvy;

@@ -7,6 +7,7 @@ import org.json.JSONException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import net.cis.bkav.entity.BkavResult;
 import net.cis.bkav.entity.CommandDataEntity;
+import net.cis.bkav.entity.Invoice;
 import net.cis.bkav.entity.InvoiceAttachFileWS;
 import net.cis.bkav.entity.InvoiceDetail;
 import net.cis.bkav.entity.InvoiceDetailsWSResult;
@@ -31,7 +32,11 @@ public interface InvoiceService {
     
     BkavResult getInvoiceStatus(String invoiceGUID) throws Exception;
     
+    int getInvoiceStatus(EInvoiceEntity invoice) throws Exception;
+    
     BkavResult getInvoiceHistory(String invoiceGUID) throws Exception;
+    
+    Invoice prepareInvoiceData(BkavTicketDto bkavTicketDto);
     
     CompanyInforDto getCompanyInformationByTaxCode(String taxCode, long providerId) throws Exception;
     

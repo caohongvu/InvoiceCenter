@@ -77,6 +77,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 	@Override
 	public String createInvoice(BkavTicketDto bkavTicketDto) throws Exception {
 		String invoiceCode = "";
+		bkavTicketDto.setPartnerInvoiceStringId(BkavInvoiceUtil.generateGuidString());
 		long id = eInvoiceService.createEInvoice(bkavTicketDto);
 		
 		CommandDataEntity commandDataEntity = prepareDataForCreatingInvoice(bkavTicketDto);
@@ -119,6 +120,30 @@ public class InvoiceServiceImpl implements InvoiceService {
 		} 
 		
 		return invoiceCode;
+	}
+	
+	@Override
+	public int getInvoiceStatus(EInvoiceEntity eInvoiceEntity) throws Exception {
+		// Prepare Command Data
+		CommandDataEntity commandDataEntity = prepareDataForGettingInvoiceStatus(eInvoiceEntity.getPartnerInvoiceStringId());
+	 	CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(eInvoiceEntity.getProviderId());
+	 	
+	 	String partnerToken = companyKeyEntity.getPartnerToken();
+		String encryptedCommandData = encryptionService.doEncryptedCommandData(commandDataEntity, partnerToken);
+		
+		BkavRequest bkavRequest = new BkavRequest();
+		bkavRequest.setPartnerGUID(companyKeyEntity.getPartnerGuid());
+		bkavRequest.setCommandData(encryptedCommandData);
+		
+		BkavResponse bkavResponse = bkavExecCommand.doExecCommand(bkavRequest);
+		String decryptedResult = bkavResponse.getDecryptedResult();
+		String result = encryptionService.doDecryptedCommamdData(decryptedResult, partnerToken);
+		
+		// Parse to Object
+		JSONObject jsonObject = new JSONObject(result);
+		int status = jsonObject.getInt("Status");
+		
+		return status;
 	}
 	
 	@Override
@@ -291,11 +316,17 @@ public class InvoiceServiceImpl implements InvoiceService {
 
 	@Override
 	public BkavResult getInvoiceStatus(String invoiceGUID) throws Exception {
+		BkavResult bkavResult = new BkavResult();
 		// Prepare Command Data
 		CommandDataEntity commandDataEntity = prepareDataForGettingInvoiceStatus(invoiceGUID);
 		
 		// Get Token and Partner GUID by company
 	 	EInvoiceEntity eInvoiceEntity = eInvoiceService.getByInvoiceGUID(invoiceGUID);
+	 	if (eInvoiceEntity == null) {
+	 		bkavResult.setResult(null);
+	 		bkavResult.setStatus(1);
+	 		return null;
+	 	}
 	 	int companyId = eInvoiceEntity.getProviderId();
 	 	CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(companyId);
 	 	String partnerToken = companyKeyEntity.getPartnerToken();
@@ -319,7 +350,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		// Parse to Object
 		JSONObject jsonObject = new JSONObject(result);
 		
-		BkavResult bkavResult = new BkavResult();
+		
 		bkavResult.setIsError(jsonObject.getBoolean("isError"));
 		bkavResult.setStatus(jsonObject.getInt("Status"));
 		bkavResult.setIsOk(jsonObject.getBoolean("isOk"));
@@ -621,7 +652,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		CommandObject commandObject = new CommandObject();
 		commandObject.setInvoice(prepareInvoiceData(bkavTicketDto));
 		commandObject.setPartnerInvoiceID(0);
-		commandObject.setPartnerInvoiceStringID(BkavInvoiceUtil.generateGuidString());
+		commandObject.setPartnerInvoiceStringID(bkavTicketDto.getPartnerInvoiceStringId());
 		commandObject.setListInvoiceAttachFileWS(prepareInvoiceAttachFileWS());
 		commandObject.setListInvoiceDetailsWS(prepareListInvoiceDetailsWS(bkavTicketDto));
 		
@@ -692,10 +723,11 @@ public class InvoiceServiceImpl implements InvoiceService {
 		boolean isCreated = false;
 		CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(eInvoice.getProviderId());
 		
-		Gson gson = new Gson();
-		CommandDataEntity commandDataEntity = gson.fromJson(eInvoice.getRequestBody(), CommandDataEntity.class);
+		System.out.println(eInvoice.getRequestBody());
 	 	
-	 	String encryptedCommandData = encryptionService.doEncryptedCommandData(commandDataEntity, companyKeyEntity.getPartnerToken());
+	 	JSONObject requestBody = new JSONObject(eInvoice.getRequestBody());
+	 	System.out.println(requestBody.toString());
+	 	String encryptedCommandData = encryptionService.doEncryptedRequestBody(requestBody.toString(), companyKeyEntity.getPartnerToken());
 		
 		BkavRequest bkavRequest = new BkavRequest();
 		bkavRequest.setPartnerGUID(companyKeyEntity.getPartnerGuid());
