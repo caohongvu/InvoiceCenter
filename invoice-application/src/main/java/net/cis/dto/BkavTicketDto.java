@@ -56,6 +56,9 @@ public class BkavTicketDto {
 	@JsonProperty("TransactionID")
 	private String transactionId;
 	
+	@JsonProperty("IsMonthly")
+	private int isMonthly;
+	
 	@JsonProperty("PaymentConfiguration")
 	private List<PaymentConfig> paymentConfiguration;
 	
@@ -155,5 +158,12 @@ public class BkavTicketDto {
 	public void setTransactionId(String transactionId) {
 		this.transactionId = transactionId;
 	}
+	public int getIsMonthly() {
+		return isMonthly;
+	}
+	public void setIsMonthly(int isMonthly) {
+		this.isMonthly = isMonthly;
+	}
+	
 	
 }

@@ -54,7 +54,7 @@ public class EInvoiceEntity {
 	
 	@JsonProperty("ProvideId")
 	@Column(name="provider_id")
-	private int provideId;
+	private int providerId;
 	
 	@JsonProperty("InvoiceGUID")
 	@Column(name="invoice_guid")
@@ -63,7 +63,15 @@ public class EInvoiceEntity {
 	@JsonProperty("InvoiceCode")
 	@Column(name = "invoice_code")
 	private String invoiceCode;
-
+	
+	@JsonProperty("RequestBody")
+	@Column(name = "request_body")
+	private String requestBody;
+	
+	@JsonProperty("ResponseBody")
+	@Column(name = "response_body")
+	private String responseBody;
+	
 	public long getId() {
 		return id;
 	}
@@ -112,14 +120,6 @@ public class EInvoiceEntity {
 		this.invoiceStatus = invoiceStatus;
 	}
 
-	public int getProvideId() {
-		return provideId;
-	}
-
-	public void setProvideId(int provideId) {
-		this.provideId = provideId;
-	}
-
 	public String getInvoiceGUID() {
 		return invoiceGUID;
 	}
@@ -151,4 +151,30 @@ public class EInvoiceEntity {
 	public void setInvoiceCode(String invoiceCode) {
 		this.invoiceCode = invoiceCode;
 	}
+
+	public String getRequestBody() {
+		return requestBody;
+	}
+
+	public void setRequestBody(String requestBody) {
+		this.requestBody = requestBody;
+	}
+
+	public int getProviderId() {
+		return providerId;
+	}
+
+	public void setProviderId(int providerId) {
+		this.providerId = providerId;
+	}
+
+	public String getResponseBody() {
+		return responseBody;
+	}
+
+	public void setResponseBody(String responseBody) {
+		this.responseBody = responseBody;
+	}
+	
+	
 }

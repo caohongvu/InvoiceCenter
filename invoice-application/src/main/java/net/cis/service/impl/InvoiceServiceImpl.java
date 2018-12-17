@@ -16,13 +16,12 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 
 import net.cis.bkav.BkavExecCommand;
-import net.cis.bkav.entity.BkavError;
 import net.cis.bkav.entity.BkavRequest;
 import net.cis.bkav.entity.BkavResponse;
 import net.cis.bkav.entity.BkavResult;
-import net.cis.bkav.entity.BkavSuccess;
 import net.cis.bkav.entity.CommandDataEntity;
 import net.cis.bkav.entity.CommandObject;
 import net.cis.bkav.entity.Invoice;
@@ -33,7 +32,6 @@ import net.cis.bkav.entity.InvoiceDetailsWS;
 import net.cis.bkav.entity.InvoiceDetailsWSResult;
 import net.cis.bkav.entity.InvoiceHistory;
 import net.cis.common.util.BkavInvoiceUtil;
-import net.cis.common.util.constant.BkavAttachFileConstant;
 import net.cis.common.util.constant.BkavConfigurationConstant;
 import net.cis.common.util.constant.BkavTaxRateConstant;
 import net.cis.common.util.constant.InvoiceCmdType;
@@ -77,18 +75,15 @@ public class InvoiceServiceImpl implements InvoiceService {
 	}
 
 	@Override
-	public BkavResult createInvoice(BkavTicketDto bkavTicketDto) throws Exception {
-		// Prepare Command Data
+	public String createInvoice(BkavTicketDto bkavTicketDto) throws Exception {
+		String invoiceCode = "";
+		long id = eInvoiceService.createEInvoice(bkavTicketDto);
+		
 		CommandDataEntity commandDataEntity = prepareDataForCreatingInvoice(bkavTicketDto);
-		
-		// Get Token and Partner GUID by company
-	 	int companyId = bkavTicketDto.getProviderId();
-		
-	 	CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(companyId);
 
-	 	// Encrypted Command Data
-		String encryptedCommandData = encryptionService.doEncryptedCommandData(commandDataEntity, companyKeyEntity.getPartnerToken());
-		System.out.println("encryptedCommandData: " + encryptedCommandData);
+		int companyId = bkavTicketDto.getProviderId();
+	 	CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(companyId);
+	 	String encryptedCommandData = encryptionService.doEncryptedCommandData(commandDataEntity, companyKeyEntity.getPartnerToken());
 		
 		BkavRequest bkavRequest = new BkavRequest();
 		bkavRequest.setPartnerGUID(companyKeyEntity.getPartnerGuid());
@@ -98,11 +93,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		BkavResponse bkavResponse = new BkavResponse();
 		bkavResponse = bkavExecCommand.doExecCommand(bkavRequest);
 	
-		// Receive Response
 		String decryptedResult = bkavResponse.getDecryptedResult();
-		System.out.println("decryptedResult: " + decryptedResult);
-		
-		// Decrypted Response data
 		String result = encryptionService.doDecryptedCommamdData(decryptedResult, companyKeyEntity.getPartnerToken());
 		System.out.println(result);
 		
@@ -113,43 +104,84 @@ public class InvoiceServiceImpl implements InvoiceService {
 		boolean isOk = jsonObject.getBoolean("isOk");
 		boolean isError = jsonObject.getBoolean("isError");
 		
-		BkavResult bkavResult = new BkavResult();
+		String strObject = jsonObject.get("Object").toString();
+		if (status == 0 && isOk == true && isError == false) {
+			JSONArray jsonArray = new JSONArray(strObject);
+			for (int i = 0; i < jsonArray.length(); i++) {
+				JSONObject successObject = jsonArray.getJSONObject(i);
+
+				ObjectMapper mapper = new ObjectMapper();
+				String requestBody = mapper.writeValueAsString(commandDataEntity);
+				eInvoiceService.updateEInvoice(id, status, successObject.getString("InvoiceGUID"), successObject.getString("MTC"), requestBody, strObject);
+				
+				invoiceCode = successObject.getString("MTC");
+			}
+		} 
+		
+		return invoiceCode;
+	}
+	
+	@Override
+	public BkavResult cancelInvoice(String invoiceGUID) throws Exception {
+		BkavResult bkavResult = new BkavResult();	
+		// Prepare Command Data
+		CommandDataEntity commandDataEntity = prepareDataForCancelingInvoice(invoiceGUID);
+		
+		// Get Token and Partner GUID by company
+	 	EInvoiceEntity eInvoiceEntity = eInvoiceService.getByInvoiceGUID(invoiceGUID);
+	 	if (eInvoiceEntity == null) {
+	 		bkavResult.setIsError(false);
+			bkavResult.setStatus(1);
+			bkavResult.setIsOk(false);
+			bkavResult.setResult("Invoice GUID không tồn tại");
+			return bkavResult;
+	 	}
+			 	
+	 	int companyId = eInvoiceEntity.getProviderId();
+	 	CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(companyId);
+	 	if (companyKeyEntity == null) {
+	 		bkavResult.setIsError(false);
+			bkavResult.setStatus(1);
+			bkavResult.setIsOk(false);
+			bkavResult.setResult("Công ty không tồn tại");
+			return bkavResult;
+	 	}
+				
+	 	String partnerToken = companyKeyEntity.getPartnerToken();
+		
+		// Encrypted Command Data
+		String encryptedCommandData = encryptionService.doEncryptedCommandData(commandDataEntity, partnerToken);
+		
+		// Call BKAV Third Party 
+		BkavRequest bkavRequest = new BkavRequest();
+		bkavRequest.setPartnerGUID(companyKeyEntity.getPartnerGuid());
+		bkavRequest.setCommandData(encryptedCommandData);
+		
+		BkavResponse bkavResponse = new BkavResponse();
+		bkavResponse = bkavExecCommand.doExecCommand(bkavRequest);
+		
+		// Receive Response and Decrypted Response Data
+		String decryptedResult = bkavResponse.getDecryptedResult();
+		String result = encryptionService.doDecryptedCommamdData(decryptedResult, partnerToken);
+		System.out.println(result);
+		
+		// Parse to Object
+		JSONObject jsonObject = new JSONObject(result);
+		
+		int status = (int) jsonObject.get("Status");
+		boolean isOk = jsonObject.getBoolean("isOk");
+		boolean isError = jsonObject.getBoolean("isError");
+		
 		bkavResult.setIsError(isError);
 		bkavResult.setStatus(status);
 		bkavResult.setIsOk(isOk);
 		
 		String strObject = jsonObject.get("Object").toString();
-		if (status == 0 && isOk == true && isError == false) {
-			// Parse with Success Object
-			List<BkavSuccess> listBkavSuccess = new ArrayList<BkavSuccess>();
-			JSONArray jsonArray = new JSONArray(strObject);
-			for (int i = 0; i < jsonArray.length(); i++) {
-				JSONObject successObject = jsonArray.getJSONObject(i);
-				
-				BkavSuccess bkavSuccess = new BkavSuccess();
-				bkavSuccess.setInvoiceForm(successObject.getString("InvoiceForm"));
-				bkavSuccess.setInvoiceGUID(successObject.getString("InvoiceGUID"));
-				bkavSuccess.setInvoiceNo(successObject.getInt("InvoiceNo"));
-				bkavSuccess.setInvoiceSerial(successObject.getString("InvoiceSerial"));
-				bkavSuccess.setMessLog(successObject.getString("MessLog"));
-				bkavSuccess.setPartnerInvoiceID(successObject.getInt("PartnerInvoiceID"));
-				bkavSuccess.setPartnerInvoiceStringID(successObject.getString("PartnerInvoiceStringID"));
-				bkavSuccess.setStatus(successObject.getInt("Status"));
-				bkavSuccess.setInvoiceCode(successObject.getString("MTC"));
-					
-				listBkavSuccess.add(bkavSuccess);
-			}
-			bkavResult.setResult(listBkavSuccess);
-		} else {
-			// Parse with Error Object
-			BkavError bkavError = new BkavError();
-			bkavError.setMessage(strObject);
-			
-			bkavResult.setResult(bkavError);
-		}
+		System.out.println(strObject);
 		
 		return bkavResult;
 	}
+	
 	
 	@Override
 	public BkavResult getInvoiceDetail(String invoiceGUID) throws Exception {
@@ -168,7 +200,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 			return bkavResult;
 	 	}
 	 	
-	 	int companyId = eInvoiceEntity.getProvideId();
+	 	int companyId = eInvoiceEntity.getProviderId();
 	 	CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(companyId);
 	 	if (companyKeyEntity == null) {
 	 		bkavResult.setIsError(false);
@@ -264,7 +296,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		
 		// Get Token and Partner GUID by company
 	 	EInvoiceEntity eInvoiceEntity = eInvoiceService.getByInvoiceGUID(invoiceGUID);
-	 	int companyId = eInvoiceEntity.getProvideId();
+	 	int companyId = eInvoiceEntity.getProviderId();
 	 	CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(companyId);
 	 	String partnerToken = companyKeyEntity.getPartnerToken();
 	 	
@@ -303,7 +335,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		
 		// Get Token and Partner GUID by company
 	 	EInvoiceEntity eInvoiceEntity = eInvoiceService.getByInvoiceGUID(invoiceGUID);
-	 	int companyId = eInvoiceEntity.getProvideId();
+	 	int companyId = eInvoiceEntity.getProviderId();
 	 	CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(companyId);	
 	 	String partnerToken = companyKeyEntity.getPartnerToken();
 	 	
@@ -428,7 +460,12 @@ public class InvoiceServiceImpl implements InvoiceService {
 			invoiceDetailsWS.setIsDiscount(false);
 			invoiceDetailsWS.setIsIncrease(null);
 			invoiceDetailsWS.setItemName(item.getItemName());
-			invoiceDetailsWS.setUnitName(BkavConfigurationConstant.INVOICE_PARKING_UNIT_NAME);
+			if (bkavTicketDto.getIsMonthly() == 1) {
+				invoiceDetailsWS.setUnitName(BkavConfigurationConstant.INVOICE_MONTHLY_UNIT_NAME);
+			} else {
+				invoiceDetailsWS.setUnitName(BkavConfigurationConstant.INVOICE_DAILY_UNIT_NAME);
+			}
+			
 			invoiceDetailsWS.setTaxRateID(BkavTaxRateConstant.TAX_BY_10_PERCENTAGE);
 			invoiceDetailsWS.setTaxAmount(BkavInvoiceUtil.calculareTaxAmount(0.1, amount));
 			listInvoiceDetailsWS.add(invoiceDetailsWS);
@@ -439,13 +476,6 @@ public class InvoiceServiceImpl implements InvoiceService {
 	
 	public static List<InvoiceAttachFileWS> prepareInvoiceAttachFileWS() {
 		List<InvoiceAttachFileWS> listInvoiceAttachFileWS = new ArrayList<InvoiceAttachFileWS>();
-		
-		InvoiceAttachFileWS invoiceAttachFileWS = new InvoiceAttachFileWS();
-		invoiceAttachFileWS.setFileContent("");
-		invoiceAttachFileWS.setFileExtension(BkavAttachFileConstant.DOCX_EXTENSION);
-		invoiceAttachFileWS.setFileName("Test");
-		
-		listInvoiceAttachFileWS.add(invoiceAttachFileWS);
 		
 		return listInvoiceAttachFileWS;
 	}
@@ -478,6 +508,15 @@ public class InvoiceServiceImpl implements InvoiceService {
 		CommandDataEntity commandDataEntity = new CommandDataEntity();
 		commandDataEntity.setCmdType(InvoiceCmdType.GET_COMPANY_INFORMATION_BY_TAX_CODE);
 		commandDataEntity.setCommandObject(taxCode);
+		
+		return commandDataEntity;
+	}
+	
+	@Override
+	public CommandDataEntity prepareDataForCancelingInvoice(String invoiceGUID) {
+		CommandDataEntity commandDataEntity = new CommandDataEntity();
+		commandDataEntity.setCmdType(InvoiceCmdType.CANCEL_INVOICE);
+		commandDataEntity.setCommandObject(invoiceGUID);
 		
 		return commandDataEntity;
 	}
@@ -598,7 +637,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		return commandDataEntity;
 	}
 
-	public static Invoice prepareInvoiceData(BkavTicketDto bkavTicketDto) {
+	public Invoice prepareInvoiceData(BkavTicketDto bkavTicketDto) {
 		Invoice invoice = new Invoice();
 		
 		invoice.setBillCode(BkavConfigurationConstant.INVOCIE_BILL_CODE);
@@ -615,7 +654,8 @@ public class InvoiceServiceImpl implements InvoiceService {
 		
 		invoice.setInvoiceDate(str);
 		invoice.setInvoiceForm(BkavConfigurationConstant.INVOICE_FORM);
-		invoice.setInvoiceNo(BkavConfigurationConstant.INVOICE_NO);
+		invoice.setInvoiceNo(0);
+		
 		invoice.setInvoiceSerial(BkavConfigurationConstant.INVOICE_SERIAL);
 		invoice.setInvoiceTypeID(BkavConfigurationConstant.INVOICE_TYPE_ID);
 		invoice.setNote(BkavConfigurationConstant.INVOICE_NOTE);
@@ -630,8 +670,63 @@ public class InvoiceServiceImpl implements InvoiceService {
 		} else {
 			invoice.setReceiveTypeID(ReceiveInvoiceTypeConstant.RECEIVE_BY_SMS);
 		}
-		System.out.println("Invoice Here: " + invoice.toString());
+
 		return invoice;
 	}
 
+	@Override
+	public void handleFailedInvoice() throws Exception {
+		List<EInvoiceEntity> eInvoices = eInvoiceService.getInvoiceFailed();
+		
+		for (EInvoiceEntity eInvoice : eInvoices) {
+			boolean isReCreated = reCreateInvoice(eInvoice);
+			if (isReCreated == false) {
+				eInvoiceService.updateEInvoiceStatus(eInvoice.getId(), BkavConfigurationConstant.INVOICE_STATUS_RECREATED_FAILED);
+			}
+		}
+		
+	}
+	
+	@Override
+	public boolean reCreateInvoice(EInvoiceEntity eInvoice) throws Exception {
+		boolean isCreated = false;
+		CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(eInvoice.getProviderId());
+		
+		Gson gson = new Gson();
+		CommandDataEntity commandDataEntity = gson.fromJson(eInvoice.getRequestBody(), CommandDataEntity.class);
+	 	
+	 	String encryptedCommandData = encryptionService.doEncryptedCommandData(commandDataEntity, companyKeyEntity.getPartnerToken());
+		
+		BkavRequest bkavRequest = new BkavRequest();
+		bkavRequest.setPartnerGUID(companyKeyEntity.getPartnerGuid());
+		bkavRequest.setCommandData(encryptedCommandData);
+		
+		// Call BKAV Third Party 
+		BkavResponse bkavResponse = new BkavResponse();
+		bkavResponse = bkavExecCommand.doExecCommand(bkavRequest);
+	
+		String decryptedResult = bkavResponse.getDecryptedResult();
+		String result = encryptionService.doDecryptedCommamdData(decryptedResult, companyKeyEntity.getPartnerToken());
+		System.out.println(result);
+		
+		// Parse to Object
+		JSONObject jsonObject = new JSONObject(result);
+		
+		int status = (int) jsonObject.get("Status");
+		boolean isOk = jsonObject.getBoolean("isOk");
+		boolean isError = jsonObject.getBoolean("isError");
+		
+		String strObject = jsonObject.get("Object").toString();
+		if (status == 0 && isOk == true && isError == false) {
+			JSONArray jsonArray = new JSONArray(strObject);
+			for (int i = 0; i < jsonArray.length(); i++) {
+				JSONObject successObject = jsonArray.getJSONObject(i);
+				eInvoiceService.updateEInvoice(eInvoice.getId(), status, successObject.getString("InvoiceGUID"), successObject.getString("MTC"), eInvoice.getRequestBody(), strObject);
+				
+				isCreated = true;
+			}
+		} 
+		
+		return isCreated;
+	}
 }

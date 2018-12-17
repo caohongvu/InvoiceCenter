@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import net.cis.common.util.constant.BkavConfigurationConstant;
 import net.cis.common.util.constant.InvoiceConstant;
 import net.cis.common.util.constant.InvoiceStatusConstant;
 import net.cis.dto.BkavTicketDto;
@@ -75,21 +76,25 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 		eInvoice.setCustomerPhone(bkavTicketDto.getReceiverMobile());
 		eInvoice.setInvoiceGUID("");
 		eInvoice.setInvoiceStatus(0);
-		eInvoice.setProvideId(bkavTicketDto.getProviderId());
+		eInvoice.setProviderId(bkavTicketDto.getProviderId());
 		eInvoice.setTransactionAmount(bkavTicketDto.getTransactionAmount());
 		eInvoice.setTicketId(bkavTicketDto.getTicketId());
 		eInvoice.setCppId(bkavTicketDto.getCppId());
 		eInvoice.setTransactionId(bkavTicketDto.getTransactionId());
+		eInvoice.setRequestBody("");
+		eInvoice.setResponseBody("");
 		
 		return eInvoice;
 	}
 
 	@Override
-	public void updateEInvoice(long id, int invoiceStatus, String invoiceGUID, String invoiceCode) {
+	public void updateEInvoice(long id, int invoiceStatus, String invoiceGUID, String invoiceCode, String requestBody, String responseBody) {
 		EInvoiceEntity eInvoice = eInvoiceRepository.findById(id);
 		eInvoice.setInvoiceStatus(invoiceStatus);
 		eInvoice.setInvoiceGUID(invoiceGUID);
 		eInvoice.setInvoiceCode(invoiceCode);
+		eInvoice.setRequestBody(requestBody);
+		eInvoice.setResponseBody(responseBody);
 		
 		eInvoiceRepository.save(eInvoice);
 	}
@@ -103,6 +108,21 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 	public EInvoiceEntity getByInvoiceGUID(String invoiceGUID) {
 		return eInvoiceRepository.findByInvoiceGUID(invoiceGUID);
 	}
-	
+
+	@Override
+	public void updateEInvoiceStatus(long id, int invoiceStatus) {
+		EInvoiceEntity eInvoice = eInvoiceRepository.findById(id);
+		eInvoice.setInvoiceStatus(invoiceStatus);
+		
+		eInvoiceRepository.save(eInvoice);
+		
+	}
+
+
+	@Override
+	public List<EInvoiceEntity> getInvoiceFailed() {
+		List<EInvoiceEntity> eInvoices = eInvoiceRepository.findByInvoiceStatus(BkavConfigurationConstant.INVOICE_STATUS_FAILED);
+		return eInvoices;
+	}
 
 }
