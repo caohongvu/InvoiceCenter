@@ -56,6 +56,7 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 				
 				//Nếu đã gửi qua bên BKAV và nhận về kết quả không thành công, 
 				// thì update lại status của invoice thành không thành công, và gửi email thông báo
+				isReCreatedSuccessfully = false;
 				if (isReCreatedSuccessfully == false) {
 					updateEInvoiceStatus(invoiceEntity.getId(), BkavConfigurationConstant.INVOICE_STATUS_RECREATED_FAILED);
 				
@@ -87,7 +88,6 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 	}
 	
 	public static EInvoiceEntity parseEInvoice(BkavTicketDto bkavTicketDto) {
-		
 		EInvoiceEntity eInvoice = new EInvoiceEntity();
 		
 		eInvoice.setCustomerEmail(bkavTicketDto.getReceiverEmail());
