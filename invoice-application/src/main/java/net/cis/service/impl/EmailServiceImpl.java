@@ -22,6 +22,7 @@ public class EmailServiceImpl implements EmailService {
 		emailObj.setTo("operation_iparking@cis.net.vn");
 		emailObj.setSubject(title);
 		emailObj.setText(content);
+		
 		mailSender.send(emailObj);
 		
 	}
