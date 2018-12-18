@@ -3,7 +3,6 @@ package net.cis.service.impl;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
-
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -56,21 +55,21 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 				
 				//Nếu đã gửi qua bên BKAV và nhận về kết quả không thành công, 
 				// thì update lại status của invoice thành không thành công, và gửi email thông báo
+				isReCreatedSuccessfully = false;
 				if (isReCreatedSuccessfully == false) {
 					updateEInvoiceStatus(invoiceEntity.getId(), BkavConfigurationConstant.INVOICE_STATUS_RECREATED_FAILED);
 				
-					//Kiểm tra chỉ send email trong trường hợp không thể xuất hóa đơn thành công nhé, edit lại content để lấy đúng thông tin cần thiết
+					//Kiểm tra chỉ send email trong trường hợp không thể xuất hóa đơn thành công nhé, 
+					// edit lại content để lấy đúng thông tin cần thiết
 					StringBuilder emailContent = new StringBuilder();
+
 					emailContent.append("Không thể phát hành hóa đơn điện tử cho hóa đơn:<strong>"+invoiceEntity.getInvoiceCode() +"</strong>");
 					emailContent.append("Của khách hàng:<strong>"+invoiceEntity.getCustomerEmail() + " - " +invoiceEntity.getCustomerPhone() +"</strong>");
 					emailContent.append("Ở điểm đỗ:<strong>" + invoiceEntity.getCppId() + "</strong>");
-
+					
 					emailService.send(InvoiceConstant.EMAIL_FAILURE_TITLE, emailContent.toString());
 				}
 			}
-			
-			
-			
 		}
 	}
 	
@@ -87,7 +86,6 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 	}
 	
 	public static EInvoiceEntity parseEInvoice(BkavTicketDto bkavTicketDto) {
-		
 		EInvoiceEntity eInvoice = new EInvoiceEntity();
 		
 		eInvoice.setCustomerEmail(bkavTicketDto.getReceiverEmail());
@@ -133,8 +131,7 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 		EInvoiceEntity eInvoice = eInvoiceRepository.findById(id);
 		eInvoice.setInvoiceStatus(invoiceStatus);
 		
-		eInvoiceRepository.save(eInvoice);
-		
+		eInvoiceRepository.save(eInvoice);	
 	}
 
 	@Override

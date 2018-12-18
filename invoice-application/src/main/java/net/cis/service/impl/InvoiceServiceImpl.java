@@ -16,8 +16,6 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-
 import net.cis.bkav.BkavExecCommand;
 import net.cis.bkav.entity.BkavRequest;
 import net.cis.bkav.entity.BkavResponse;
@@ -125,7 +123,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 	@Override
 	public int getInvoiceStatus(EInvoiceEntity eInvoiceEntity) throws Exception {
 		// Prepare Command Data
-		CommandDataEntity commandDataEntity = prepareDataForGettingInvoiceStatus(eInvoiceEntity.getPartnerInvoiceStringId());
+		CommandDataEntity commandDataEntity = prepareDataForGettingInvoiceDetail(eInvoiceEntity.getPartnerInvoiceStringId());
 	 	CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(eInvoiceEntity.getProviderId());
 	 	
 	 	String partnerToken = companyKeyEntity.getPartnerToken();
@@ -142,6 +140,8 @@ public class InvoiceServiceImpl implements InvoiceService {
 		// Parse to Object
 		JSONObject jsonObject = new JSONObject(result);
 		int status = jsonObject.getInt("Status");
+		
+		status = 1;
 		
 		return status;
 	}
