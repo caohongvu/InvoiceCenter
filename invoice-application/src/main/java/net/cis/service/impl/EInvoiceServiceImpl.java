@@ -55,7 +55,6 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 				
 				//Nếu đã gửi qua bên BKAV và nhận về kết quả không thành công, 
 				// thì update lại status của invoice thành không thành công, và gửi email thông báo
-				isReCreatedSuccessfully = false;
 				if (isReCreatedSuccessfully == false) {
 					updateEInvoiceStatus(invoiceEntity.getId(), BkavConfigurationConstant.INVOICE_STATUS_RECREATED_FAILED);
 				
@@ -63,9 +62,11 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 					// edit lại content để lấy đúng thông tin cần thiết
 					StringBuilder emailContent = new StringBuilder();
 
-					emailContent.append("Không thể phát hành hóa đơn điện tử cho hóa đơn:<strong>"+invoiceEntity.getInvoiceCode() +"</strong>");
-					emailContent.append("Của khách hàng:<strong>"+invoiceEntity.getCustomerEmail() + " - " +invoiceEntity.getCustomerPhone() +"</strong>");
-					emailContent.append("Ở điểm đỗ:<strong>" + invoiceEntity.getCppId() + "</strong>");
+					emailContent.append("Không thể phát hành hóa đơn điện tử cho hóa đơn:<strong> " + invoiceEntity.getInvoiceCode() + "</strong>\n");
+					emailContent.append("Của khách hàng:<strong> " + invoiceEntity.getCustomerEmail() + " - " + invoiceEntity.getCustomerPhone() + " </strong>\n");
+					emailContent.append("Ở điểm đỗ:<strong> " + invoiceEntity.getCppId() + " </strong>\n");
+					emailContent.append("Của vé: <strong> " + invoiceEntity.getTicketId() + " </strong>\n");
+					emailContent.append("Của giao dịch: <strong> " + invoiceEntity.getTransactionId() + " </strong>\n");
 					
 					emailService.send(InvoiceConstant.EMAIL_FAILURE_TITLE, emailContent.toString());
 				}

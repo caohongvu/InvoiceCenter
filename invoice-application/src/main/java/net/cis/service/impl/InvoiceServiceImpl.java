@@ -141,8 +141,6 @@ public class InvoiceServiceImpl implements InvoiceService {
 		JSONObject jsonObject = new JSONObject(result);
 		int status = jsonObject.getInt("Status");
 		
-		status = 1;
-		
 		return status;
 	}
 	
