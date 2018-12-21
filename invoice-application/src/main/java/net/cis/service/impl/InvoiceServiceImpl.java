@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import net.cis.bkav.BkavExecCommand;
 import net.cis.bkav.entity.BkavRequest;
 import net.cis.bkav.entity.BkavResponse;
@@ -35,6 +36,8 @@ import net.cis.common.util.constant.BkavTaxRateConstant;
 import net.cis.common.util.constant.InvoiceCmdType;
 import net.cis.common.util.constant.ReceiveInvoiceTypeConstant;
 import net.cis.dto.BkavTicketDto;
+import net.cis.dto.CancelInvoice;
+import net.cis.dto.CancelInvoiceDto;
 import net.cis.dto.CompanyInforDto;
 import net.cis.jpa.entity.CompanyKeyEntity;
 import net.cis.jpa.entity.EInvoiceEntity;
@@ -111,17 +114,27 @@ public class InvoiceServiceImpl implements InvoiceService {
 
 				ObjectMapper mapper = new ObjectMapper();
 				String requestBody = mapper.writeValueAsString(commandDataEntity);
-				eInvoiceService.updateEInvoice(id, status, successObject.getString("InvoiceGUID"), successObject.getString("MTC"), requestBody, strObject);
+				int invoiceStatus = successObject.getInt("Status");
+				eInvoiceService.updateEInvoice(id, invoiceStatus, successObject.getString("InvoiceGUID"), successObject.getString("MTC"), requestBody, strObject);
+				if (invoiceStatus == 0) {
+					eInvoiceService.updateEInvoiceSystemStatus(id, BkavConfigurationConstant.SYSTEM_STATUS_SUCCESS);
+				} else {
+					eInvoiceService.updateEInvoiceSystemStatus(id, BkavConfigurationConstant.SYSTEM_STATUS_FAILED);
+				}
 				
 				invoiceCode = successObject.getString("MTC");
 			}
 		} 
+		if (status == 1) {
+			eInvoiceService.updateEInvoiceSystemStatus(id, BkavConfigurationConstant.SYSTEM_STATUS_FAILED);
+		}
 		
 		return invoiceCode;
 	}
 	
 	@Override
 	public int getInvoiceStatus(EInvoiceEntity eInvoiceEntity) throws Exception {
+		int invoiceStatus = 1;
 		// Prepare Command Data
 		CommandDataEntity commandDataEntity = prepareDataForGettingInvoiceDetail(eInvoiceEntity.getPartnerInvoiceStringId());
 	 	CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(eInvoiceEntity.getProviderId());
@@ -139,35 +152,38 @@ public class InvoiceServiceImpl implements InvoiceService {
 		
 		// Parse to Object
 		JSONObject jsonObject = new JSONObject(result);
-		int status = jsonObject.getInt("Status");
+		int status = (int) jsonObject.get("Status");
+		boolean isOk = jsonObject.getBoolean("isOk");
+		boolean isError = jsonObject.getBoolean("isError");
 		
-		return status;
+		String strObject = jsonObject.get("Object").toString();
+		if (status == 0 && isOk == true && isError == false) {
+			JSONArray jsonArray = new JSONArray(strObject);
+			for (int i = 0; i < jsonArray.length(); i++) {
+				JSONObject successObject = jsonArray.getJSONObject(i);
+				invoiceStatus = successObject.getInt("Status");
+			}
+		} 
+		
+		return invoiceStatus;
 	}
 	
 	@Override
-	public BkavResult cancelInvoice(String invoiceGUID) throws Exception {
-		BkavResult bkavResult = new BkavResult();	
+	public boolean cancelInvoice(String invoiceGUID) throws Exception {
+		boolean isCanceled = false;
 		// Prepare Command Data
 		CommandDataEntity commandDataEntity = prepareDataForCancelingInvoice(invoiceGUID);
 		
 		// Get Token and Partner GUID by company
 	 	EInvoiceEntity eInvoiceEntity = eInvoiceService.getByInvoiceGUID(invoiceGUID);
 	 	if (eInvoiceEntity == null) {
-	 		bkavResult.setIsError(false);
-			bkavResult.setStatus(1);
-			bkavResult.setIsOk(false);
-			bkavResult.setResult("Invoice GUID không tồn tại");
-			return bkavResult;
+	 		return false;
 	 	}
 			 	
 	 	int companyId = eInvoiceEntity.getProviderId();
 	 	CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(companyId);
 	 	if (companyKeyEntity == null) {
-	 		bkavResult.setIsError(false);
-			bkavResult.setStatus(1);
-			bkavResult.setIsOk(false);
-			bkavResult.setResult("Công ty không tồn tại");
-			return bkavResult;
+	 		return false;
 	 	}
 				
 	 	String partnerToken = companyKeyEntity.getPartnerToken();
@@ -194,15 +210,15 @@ public class InvoiceServiceImpl implements InvoiceService {
 		int status = (int) jsonObject.get("Status");
 		boolean isOk = jsonObject.getBoolean("isOk");
 		boolean isError = jsonObject.getBoolean("isError");
-		
-		bkavResult.setIsError(isError);
-		bkavResult.setStatus(status);
-		bkavResult.setIsOk(isOk);
+		if (status == 0 && isOk == true && isError == false) {
+			eInvoiceService.updateEInvoiceStatus(eInvoiceEntity.getId(), BkavConfigurationConstant.INVOICE_STATUS_CANCELLED);
+			isCanceled = true;
+		}
 		
 		String strObject = jsonObject.get("Object").toString();
 		System.out.println(strObject);
 		
-		return bkavResult;
+		return isCanceled;
 	}
 	
 	
@@ -542,10 +558,27 @@ public class InvoiceServiceImpl implements InvoiceService {
 	}
 	
 	@Override
-	public CommandDataEntity prepareDataForCancelingInvoice(String invoiceGUID) {
+	public CommandDataEntity prepareDataForCancelingInvoice(String invoiceGUID) throws JsonProcessingException {
+		List<CancelInvoice> listCommandObject = new ArrayList<CancelInvoice>();
+		CancelInvoiceDto invoice = new CancelInvoiceDto();
+		invoice.setInvoiceGuid(invoiceGUID);
+		
+//		EInvoiceEntity eInvoiceEntity = eInvoiceService.getByInvoiceGUID(invoiceGUID);
+		
+		CancelInvoice cancelInvoice = new CancelInvoice();
+		cancelInvoice.setInvoice(invoice);
+		cancelInvoice.setPartnerInvoiceID(0);
+		cancelInvoice.setPartnerInvoiceStringID("");
+		cancelInvoice.setListInvoiceAttachFileWS(prepareInvoiceAttachFileWS());
+		cancelInvoice.setListInvoiceDetailsWS(new ArrayList<InvoiceDetailsWS>());
+		listCommandObject.add(cancelInvoice);
+		
+		ObjectMapper mapper = new ObjectMapper();
+		String strCommandData = mapper.writeValueAsString(listCommandObject);
+		
 		CommandDataEntity commandDataEntity = new CommandDataEntity();
-		commandDataEntity.setCmdType(InvoiceCmdType.CANCEL_INVOICE);
-		commandDataEntity.setCommandObject(invoiceGUID);
+		commandDataEntity.setCmdType(InvoiceCmdType.CANCEL_INVOICE_BY_INVOICE_GUID);
+		commandDataEntity.setCommandObject(strCommandData);
 		
 		return commandDataEntity;
 	}
@@ -751,9 +784,13 @@ public class InvoiceServiceImpl implements InvoiceService {
 			JSONArray jsonArray = new JSONArray(strObject);
 			for (int i = 0; i < jsonArray.length(); i++) {
 				JSONObject successObject = jsonArray.getJSONObject(i);
-				eInvoiceService.updateEInvoice(eInvoice.getId(), status, successObject.getString("InvoiceGUID"), successObject.getString("MTC"), eInvoice.getRequestBody(), strObject);
-				
-				isCreated = true;
+				int invoiceStatus = successObject.getInt("Status");
+				if (invoiceStatus == 0) {
+					eInvoiceService.updateEInvoice(eInvoice.getId(), invoiceStatus, successObject.getString("InvoiceGUID"), successObject.getString("MTC"), eInvoice.getRequestBody(), strObject);
+					isCreated = true;
+				} else {
+					isCreated = false;
+				}
 			}
 		} 
 		

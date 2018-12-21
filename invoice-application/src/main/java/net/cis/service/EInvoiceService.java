@@ -17,11 +17,17 @@ public interface EInvoiceService {
     
     void updateEInvoiceStatus(long id, int invoiceStatus);
     
+    void updateEInvoiceSystemStatus(long id, String systemStatus);
+    
     List<EInvoiceEntity> getByTicketId(String ticketId);
     
     EInvoiceEntity getByInvoiceGUID(String invoiceGUID);
     
     List<EInvoiceEntity> getInvoiceFailed();
+    
+    EInvoiceEntity getByPartnerStringId(String partnerStringId);
+    
+    EInvoiceEntity getByTicketIdAndTranId(String ticketId, String tranId);
     
 }
  

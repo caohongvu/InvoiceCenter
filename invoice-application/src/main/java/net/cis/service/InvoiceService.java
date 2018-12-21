@@ -26,7 +26,7 @@ public interface InvoiceService {
 	
 	void handleFailedInvoice() throws Exception;
     
-    BkavResult cancelInvoice(String invoiceGUID) throws Exception;
+	boolean cancelInvoice(String invoiceGUID) throws Exception;
     
     BkavResult getInvoiceDetail(String invoiceGUID) throws Exception;
     
@@ -48,7 +48,7 @@ public interface InvoiceService {
     
     CommandDataEntity prepareDataForGettingInvoiceHistory(String invoiceGUID);
     
-    CommandDataEntity prepareDataForCancelingInvoice(String invoiceGUID);
+    CommandDataEntity prepareDataForCancelingInvoice(String invoiceGUID) throws JsonProcessingException;
     
     CommandDataEntity prepareDataForGettingCompanyInformationByTaxCode(String taxCode);
     

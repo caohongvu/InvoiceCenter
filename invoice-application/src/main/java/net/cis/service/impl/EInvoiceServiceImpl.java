@@ -40,7 +40,7 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 
 	@Scheduled(fixedDelay=5*60*1000) //5 phút reload lại danh sách 1 lần
 	private void checkAndResendNotMatchInvoice() throws Exception {
-		List<EInvoiceEntity> notMatchStatusEInvoices = eInvoiceRepository.findByInvoiceStatus(BkavConfigurationConstant.INVOICE_STATUS_FAILED);
+		List<EInvoiceEntity> notMatchStatusEInvoices = eInvoiceRepository.findByInvoiceStatusAndSystemStatus(BkavConfigurationConstant.INVOICE_STATUS_FAILED, BkavConfigurationConstant.SYSTEM_STATUS_FAILED);
 		
 		for(EInvoiceEntity invoiceEntity : notMatchStatusEInvoices) {
 			//call qua BKAV để check status của invoice
@@ -57,7 +57,8 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 				// thì update lại status của invoice thành không thành công, và gửi email thông báo
 				if (isReCreatedSuccessfully == false) {
 					updateEInvoiceStatus(invoiceEntity.getId(), BkavConfigurationConstant.INVOICE_STATUS_RECREATED_FAILED);
-				
+					updateEInvoiceSystemStatus(invoiceEntity.getId(), BkavConfigurationConstant.SYSTEM_STATUS_RE_CREATE_FAILED);
+					
 					//Kiểm tra chỉ send email trong trường hợp không thể xuất hóa đơn thành công nhé, 
 					// edit lại content để lấy đúng thông tin cần thiết
 					StringBuilder emailContent = new StringBuilder();
@@ -101,6 +102,7 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 		eInvoice.setRequestBody("");
 		eInvoice.setResponseBody("");
 		eInvoice.setPartnerInvoiceStringId(bkavTicketDto.getPartnerInvoiceStringId());
+		eInvoice.setSystemStatus(BkavConfigurationConstant.SYSTEM_STATUS_PROCESSING);
 		
 		return eInvoice;
 	}
@@ -128,6 +130,11 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 	}
 
 	@Override
+	public EInvoiceEntity getByPartnerStringId(String partnerStringId) {
+		return eInvoiceRepository.findByPartnerInvoiceStringId(partnerStringId);
+	}
+
+	@Override
 	public void updateEInvoiceStatus(long id, int invoiceStatus) {
 		EInvoiceEntity eInvoice = eInvoiceRepository.findById(id);
 		eInvoice.setInvoiceStatus(invoiceStatus);
@@ -137,8 +144,21 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 
 	@Override
 	public List<EInvoiceEntity> getInvoiceFailed() {
-		List<EInvoiceEntity> eInvoices = eInvoiceRepository.findByInvoiceStatus(BkavConfigurationConstant.INVOICE_STATUS_FAILED);
+		List<EInvoiceEntity> eInvoices = eInvoiceRepository.findByInvoiceStatusAndSystemStatus(BkavConfigurationConstant.INVOICE_STATUS_FAILED, BkavConfigurationConstant.SYSTEM_STATUS_FAILED);
 		return eInvoices;
+	}
+
+	@Override
+	public void updateEInvoiceSystemStatus(long id, String systemStatus) {
+		EInvoiceEntity eInvoice = eInvoiceRepository.findById(id);
+		eInvoice.setSystemStatus(systemStatus);
+		
+		eInvoiceRepository.save(eInvoice);	
+	}
+
+	@Override
+	public EInvoiceEntity getByTicketIdAndTranId(String ticketId, String transactionId) {
+		return eInvoiceRepository.findDistinctByTicketIdAndTransactionId(ticketId, transactionId);
 	}
 
 }

@@ -76,6 +76,10 @@ public class EInvoiceEntity {
 	@Column(name = "partner_invoice_string_id")
 	private String partnerInvoiceStringId;
 	
+	@JsonProperty("SystemStatus")
+	@Column(name = "system_status")
+	private String systemStatus;
+	
 	public long getId() {
 		return id;
 	}
@@ -187,6 +191,13 @@ public class EInvoiceEntity {
 	public void setPartnerInvoiceStringId(String partnerInvoiceStringId) {
 		this.partnerInvoiceStringId = partnerInvoiceStringId;
 	}
-	
+
+	public String getSystemStatus() {
+		return systemStatus;
+	}
+
+	public void setSystemStatus(String systemStatus) {
+		this.systemStatus = systemStatus;
+	}
 	
 }

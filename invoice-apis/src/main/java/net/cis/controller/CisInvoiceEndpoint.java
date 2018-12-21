@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.annotations.Api;
 import net.cis.bkav.entity.BkavResult;
-import net.cis.bkav.entity.BkavSuccess;
 import net.cis.bkav.entity.InvoiceSearchResult;
 import net.cis.common.util.constant.BkavConfigurationConstant;
 import net.cis.common.web.ResponseError;
+import net.cis.dto.BkavCancelDto;
 import net.cis.dto.BkavTicketDto;
 import net.cis.dto.CompanyInforDto;
 import net.cis.dto.EInvoiceDto;
@@ -65,28 +65,30 @@ public class CisInvoiceEndpoint {
 	
 	@RequestMapping(value = "/cancel", method = RequestMethod.POST) 
 	@ResponseBody
-	public ResponseDto cancelInvoice(HttpServletRequest request, @RequestParam("invoiceGUID") String invoiceGUID) throws Exception {
+	public ResponseDto cancelInvoice(HttpServletRequest request, @RequestBody BkavCancelDto bkavCancelDto) throws Exception {
 		ResponseDto response = new ResponseDto();
 		
-		// Call BKAV to cancel Invoice
-		BkavResult bkavResult = new BkavResult();	
-		bkavResult = invoiceService.cancelInvoice(invoiceGUID);
+		EInvoiceEntity eInvoice = eInvoiceService.getByTicketIdAndTranId(bkavCancelDto.getTicketId(), bkavCancelDto.getTransactionId());
+		if (eInvoice == null) {
+			response.setError(new ResponseError(HttpServletResponse.SC_BAD_REQUEST, "Không tìm thấy thông tin"));
+			response.setData("");
+			return response;
+		}
 		
-		if (bkavResult.getStatus() == 1) {
-			response.setError(new ResponseError(HttpServletResponse.SC_BAD_REQUEST, bkavResult.getResult().toString()));
+		// Call BKAV to cancel Invoice
+		boolean isCanceled = invoiceService.cancelInvoice(eInvoice.getInvoiceGUID());
+		
+		if (isCanceled == false) {
+			response.setError(new ResponseError(HttpServletResponse.SC_BAD_REQUEST, "Không thể hủy hóa đơn"));
+			response.setData("");
 			return response;
 		}
 		
 		// Update Invoice GUID for ticket
-		@SuppressWarnings("unchecked")
-		List<BkavSuccess> list = (List<BkavSuccess>) bkavResult.getResult();
-		EInvoiceEntity eInvoice = eInvoiceService.getByInvoiceGUID(invoiceGUID);
-		for (BkavSuccess item : list) {
-			eInvoiceService.updateEInvoiceStatus(eInvoice.getId(), item.getStatus());
-			response.setData(item.getInvoiceCode());
-		}
+		eInvoiceService.updateEInvoiceStatus(eInvoice.getId(), eInvoice.getInvoiceStatus());
 		
-		response.setError(new ResponseError(HttpServletResponse.SC_OK, ""));
+		response.setData(eInvoice.getInvoiceGUID());
+		response.setError(new ResponseError(HttpServletResponse.SC_OK, "Đã hủy hóa đơn"));
 		return response;
 	}
 	

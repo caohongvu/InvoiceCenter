@@ -17,11 +17,15 @@ public interface EInvoiceRepository  extends JpaRepository<EInvoiceEntity, Long>
 	
 	EInvoiceEntity findByInvoiceGUID(String invoiceGUID);
 	
+	EInvoiceEntity findByPartnerInvoiceStringId(String partnerInvoiceStringId);
+	
 	List<EInvoiceEntity> findByTicketId(String ticketId);
 	
 	@Query(nativeQuery = true, value = "SELECT * from invoice_center.e_invoice where provider_id = :providerId order by invoice_no desc limit 0, 1")
 	EInvoiceEntity findTopByProviderIdOrderByInvoiceNoDesc(@Param("providerId") int providerId);
 	
-	List<EInvoiceEntity> findByInvoiceStatus(int status);
+	// @Query(nativeQuery = true, value = "SELECT * from invoice_center.e_invoice where invoice_status = :invoiceStatus AND system_status = :systemStatus")
+	List<EInvoiceEntity> findByInvoiceStatusAndSystemStatus(int invoiceStatus, String systemStatus);
 
+	EInvoiceEntity findDistinctByTicketIdAndTransactionId(String ticketId, String transactionId);
 }
