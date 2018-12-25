@@ -144,7 +144,7 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 
 	@Override
 	public List<EInvoiceEntity> getInvoiceFailed() {
-		List<EInvoiceEntity> eInvoices = eInvoiceRepository.findByInvoiceStatusAndSystemStatus(BkavConfigurationConstant.INVOICE_STATUS_FAILED, BkavConfigurationConstant.SYSTEM_STATUS_FAILED);
+		List<EInvoiceEntity> eInvoices = eInvoiceRepository.findByInvoiceStatus(BkavConfigurationConstant.INVOICE_STATUS_RECREATED_FAILED);
 		return eInvoices;
 	}
 

@@ -44,6 +44,7 @@ import net.cis.jpa.entity.EInvoiceEntity;
 import net.cis.jpa.entity.PaymentConfig;
 import net.cis.service.CompanyKeyService;
 import net.cis.service.CompressionService;
+import net.cis.service.ConfigurationService;
 import net.cis.service.EInvoiceService;
 import net.cis.service.EncryptionService;
 import net.cis.service.InvoiceService;
@@ -70,9 +71,14 @@ public class InvoiceServiceImpl implements InvoiceService {
 	@Autowired
 	CompanyKeyService companyKeyService;
 	
+	@Autowired
+	ConfigurationService configurationService;
+	
 	@PostConstruct
 	public void initialize() {
 		mapper = new ModelMapper();
+		
+		configurationService.getWebService("url");
 	}
 
 	@Override

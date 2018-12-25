@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.annotations.Api;
 import net.cis.bkav.entity.BkavResult;
-import net.cis.bkav.entity.InvoiceSearchResult;
-import net.cis.common.util.constant.BkavConfigurationConstant;
 import net.cis.common.web.ResponseError;
 import net.cis.dto.BkavCancelDto;
 import net.cis.dto.BkavTicketDto;
@@ -105,7 +103,6 @@ public class CisInvoiceEndpoint {
 	@RequestMapping(value = "/detail/by_ticket", method = RequestMethod.GET)
 	@ResponseBody
 	public ResponseDto getInvoiceForDownloading(HttpServletRequest request, @RequestParam("ticketId") String ticketId) throws Exception {
-		InvoiceSearchResult invoiceSearchResult = new InvoiceSearchResult();
 		List<String> invoiceCodes = new ArrayList<String>();
 		
 		List<EInvoiceEntity> eInvoiceEntitys = eInvoiceService.getByTicketId(ticketId);
@@ -116,12 +113,9 @@ public class CisInvoiceEndpoint {
 				}
 		}
 		
-		invoiceSearchResult.setInvoiceCodes(invoiceCodes);
-		invoiceSearchResult.setUrl(BkavConfigurationConstant.BKAV_DOWNLOAD_INVOICE_URL);
-		
 		ResponseDto response = new ResponseDto();
 		response.setError(new ResponseError(HttpServletResponse.SC_OK, ""));
-		response.setData(invoiceSearchResult);
+		response.setData(invoiceCodes);
 		
 		return response;
 	}
@@ -212,6 +206,18 @@ public class CisInvoiceEndpoint {
 			return response;
 		}
 		
+		response.setError(new ResponseError(HttpServletResponse.SC_OK, ""));
+		response.setData(eInvoiceEntitys);
+		
+		return response;
+	}
+	
+	@RequestMapping(value = "/failed/", method = RequestMethod.GET)
+	@ResponseBody
+	public ResponseDto getInvoiceFailed(HttpServletRequest request) throws Exception {
+		List<EInvoiceEntity> eInvoiceEntitys = eInvoiceService.getInvoiceFailed();
+		
+		ResponseDto response = new ResponseDto();
 		response.setError(new ResponseError(HttpServletResponse.SC_OK, ""));
 		response.setData(eInvoiceEntitys);
 		
