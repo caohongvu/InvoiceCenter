@@ -3,10 +3,14 @@ package net.cis.service.impl;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
 import net.cis.common.util.constant.BkavConfigurationConstant;
 import net.cis.common.util.constant.InvoiceConstant;
 import net.cis.dto.BkavTicketDto;
@@ -32,18 +36,19 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 	@Autowired
 	EmailService emailService;
 	
+	@Autowired
+	EntityManager entityManager;
 	
 	@PostConstruct
 	public void initialize() throws Exception {
 		mapper = new ModelMapper();
 	}
 
-	@Scheduled(fixedDelay=5*60*1000) //5 phút reload lại danh sách 1 lần
+	@Scheduled(fixedDelay=5*60*1000)
 	private void checkAndResendNotMatchInvoice() throws Exception {
 		List<EInvoiceEntity> notMatchStatusEInvoices = eInvoiceRepository.findByInvoiceStatusAndSystemStatus(BkavConfigurationConstant.INVOICE_STATUS_FAILED, BkavConfigurationConstant.SYSTEM_STATUS_FAILED);
 		
 		for(EInvoiceEntity invoiceEntity : notMatchStatusEInvoices) {
-			//call qua BKAV để check status của invoice
 			int status = invoiceService.getInvoiceStatus(invoiceEntity);
 			if (status == 0) {
 				//Nếu đã bên BKAV đã phát hành invoice này, thì chỉ việc update lại status của invoice này bên mình
@@ -142,10 +147,23 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 		eInvoiceRepository.save(eInvoice);	
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public List<EInvoiceEntity> getInvoiceFailed() {
-		List<EInvoiceEntity> eInvoices = eInvoiceRepository.findByInvoiceStatus(BkavConfigurationConstant.INVOICE_STATUS_RECREATED_FAILED);
-		return eInvoices;
+	public List<EInvoiceEntity> getInvoiceFailed(int providerId, String email, String phone) {
+		String sql = "SELECT e FROM EInvoiceEntity e WHERE e.invoiceStatus = 2";
+		
+		if (providerId != 0) {
+			sql += " AND e.providerId = " + providerId;
+		}
+		if (email != null && email != "" && !email.isEmpty()) {
+			sql += " AND e.customerEmail LIKE %" + email + "% ";
+		}
+		if (phone != null && phone != "" && !phone.isEmpty()) {
+			sql += " AND e.customerPhone LIKE '%%" + phone + "%%'";
+		}
+		
+		Query query = entityManager.createQuery(sql);
+		return query.getResultList();
 	}
 
 	@Override

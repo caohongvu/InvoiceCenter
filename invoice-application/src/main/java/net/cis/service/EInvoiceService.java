@@ -23,7 +23,7 @@ public interface EInvoiceService {
     
     EInvoiceEntity getByInvoiceGUID(String invoiceGUID);
     
-    List<EInvoiceEntity> getInvoiceFailed();
+    List<EInvoiceEntity> getInvoiceFailed(int providerId, String email, String phone);
     
     EInvoiceEntity getByPartnerStringId(String partnerStringId);
     

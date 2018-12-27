@@ -40,6 +40,7 @@ import net.cis.dto.CancelInvoice;
 import net.cis.dto.CancelInvoiceDto;
 import net.cis.dto.CompanyInforDto;
 import net.cis.jpa.entity.CompanyKeyEntity;
+import net.cis.jpa.entity.ConfigurationEntity;
 import net.cis.jpa.entity.EInvoiceEntity;
 import net.cis.jpa.entity.PaymentConfig;
 import net.cis.service.CompanyKeyService;
@@ -48,6 +49,7 @@ import net.cis.service.ConfigurationService;
 import net.cis.service.EInvoiceService;
 import net.cis.service.EncryptionService;
 import net.cis.service.InvoiceService;
+import net.cis.service.cache.ConfigurationCache;
 /**
  * Created by NhanNguyen on 19/10/2018
  */
@@ -74,11 +76,15 @@ public class InvoiceServiceImpl implements InvoiceService {
 	@Autowired
 	ConfigurationService configurationService;
 	
+	@Autowired
+	ConfigurationCache configurationCache;
+	
 	@PostConstruct
 	public void initialize() {
 		mapper = new ModelMapper();
 		
-		configurationService.getWebService("url");
+		ConfigurationEntity entity = configurationService.getWebService("url");
+		configurationCache.put("URL", entity.getValue());
 	}
 
 	@Override
@@ -96,6 +102,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		BkavRequest bkavRequest = new BkavRequest();
 		bkavRequest.setPartnerGUID(companyKeyEntity.getPartnerGuid());
 		bkavRequest.setCommandData(encryptedCommandData);
+		bkavRequest.setUrl(configurationCache.get("URL"));
 		
 		// Call BKAV Third Party 
 		BkavResponse bkavResponse = new BkavResponse();
@@ -151,6 +158,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		BkavRequest bkavRequest = new BkavRequest();
 		bkavRequest.setPartnerGUID(companyKeyEntity.getPartnerGuid());
 		bkavRequest.setCommandData(encryptedCommandData);
+		bkavRequest.setUrl(configurationCache.get("URL"));
 		
 		BkavResponse bkavResponse = bkavExecCommand.doExecCommand(bkavRequest);
 		String decryptedResult = bkavResponse.getDecryptedResult();
@@ -201,6 +209,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		BkavRequest bkavRequest = new BkavRequest();
 		bkavRequest.setPartnerGUID(companyKeyEntity.getPartnerGuid());
 		bkavRequest.setCommandData(encryptedCommandData);
+		bkavRequest.setUrl(configurationCache.get("URL"));
 		
 		BkavResponse bkavResponse = new BkavResponse();
 		bkavResponse = bkavExecCommand.doExecCommand(bkavRequest);
@@ -264,6 +273,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		BkavRequest bkavRequest = new BkavRequest();
 		bkavRequest.setPartnerGUID(companyKeyEntity.getPartnerGuid());
 		bkavRequest.setCommandData(encryptedCommandData);
+		bkavRequest.setUrl(configurationCache.get("URL"));
 		
 		BkavResponse bkavResponse = new BkavResponse();
 		bkavResponse = bkavExecCommand.doExecCommand(bkavRequest);
@@ -358,6 +368,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		BkavRequest bkavRequest = new BkavRequest();
 		bkavRequest.setPartnerGUID(companyKeyEntity.getPartnerGuid());
 		bkavRequest.setCommandData(encryptedCommandData);
+		bkavRequest.setUrl(configurationCache.get("URL"));
 		
 		BkavResponse bkavResponse = new BkavResponse();
 		bkavResponse = bkavExecCommand.doExecCommand(bkavRequest);
@@ -397,6 +408,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		BkavRequest bkavRequest = new BkavRequest();
 		bkavRequest.setPartnerGUID(companyKeyEntity.getPartnerGuid());
 		bkavRequest.setCommandData(encryptedCommandData);
+		bkavRequest.setUrl(configurationCache.get("URL"));
 		
 		BkavResponse bkavResponse = new BkavResponse();
 		bkavResponse = bkavExecCommand.doExecCommand(bkavRequest);
@@ -464,6 +476,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		BkavRequest bkavRequest = new BkavRequest();
 		bkavRequest.setPartnerGUID(companyKeyEntity.getPartnerGuid());
 		bkavRequest.setCommandData(encryptedCommandData);
+		bkavRequest.setUrl(configurationCache.get("URL"));
 		
 		BkavResponse bkavResponse = new BkavResponse();
 		bkavResponse = bkavExecCommand.doExecCommand(bkavRequest);
@@ -769,6 +782,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		BkavRequest bkavRequest = new BkavRequest();
 		bkavRequest.setPartnerGUID(companyKeyEntity.getPartnerGuid());
 		bkavRequest.setCommandData(encryptedCommandData);
+		bkavRequest.setUrl(configurationCache.get("URL"));
 		
 		// Call BKAV Third Party 
 		BkavResponse bkavResponse = new BkavResponse();
