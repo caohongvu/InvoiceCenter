@@ -156,7 +156,7 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 			sql += " AND e.providerId = " + providerId;
 		}
 		if (email != null && email != "" && !email.isEmpty()) {
-			sql += " AND e.customerEmail LIKE %" + email + "% ";
+			sql += " AND e.customerEmail LIKE '%%" + email + "%%'";
 		}
 		if (phone != null && phone != "" && !phone.isEmpty()) {
 			sql += " AND e.customerPhone LIKE '%%" + phone + "%%'";

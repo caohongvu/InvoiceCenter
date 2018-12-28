@@ -215,7 +215,7 @@ public class CisInvoiceEndpoint {
 	@RequestMapping(value = "/failed/", method = RequestMethod.GET)
 	@ResponseBody
 	public ResponseDto getInvoiceFailed(HttpServletRequest request, 
-										@RequestParam(name = "providerId", required = false) int providerId,
+										@RequestParam(name = "providerId", required = false) Integer providerId,
 										@RequestParam(name = "email", required = false) String email,
 										@RequestParam(name = "phone", required = false) String phone) throws Exception {
 		List<EInvoiceEntity> eInvoiceEntitys = eInvoiceService.getInvoiceFailed(providerId, email, phone);
@@ -223,6 +223,17 @@ public class CisInvoiceEndpoint {
 		ResponseDto response = new ResponseDto();
 		response.setError(new ResponseError(HttpServletResponse.SC_OK, ""));
 		response.setData(eInvoiceEntitys);
+		
+		return response;
+	}
+	
+	@RequestMapping(value = "/edit", method = RequestMethod.POST)
+	@ResponseBody
+	public ResponseDto editInvoice(HttpServletRequest request, @RequestParam("ticketId") String ticketId, 
+																@RequestParam("tranId") String tranId) throws Exception {
+		
+		ResponseDto response = new ResponseDto();
+		
 		
 		return response;
 	}
