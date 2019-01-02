@@ -24,7 +24,7 @@ public interface InvoiceService {
 	
 	boolean reCreateInvoice(EInvoiceEntity eInvoice) throws Exception;
 	
-	void handleFailedInvoice() throws Exception;
+//	void handleFailedInvoice() throws Exception;
     
 	boolean cancelInvoice(String invoiceGUID) throws Exception;
     

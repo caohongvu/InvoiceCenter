@@ -16,6 +16,7 @@ import net.cis.common.util.constant.InvoiceConstant;
 import net.cis.dto.BkavTicketDto;
 import net.cis.jpa.entity.EInvoiceEntity;
 import net.cis.repository.invoice.center.EInvoiceRepository;
+import net.cis.service.CarParkingPlaceService;
 import net.cis.service.EInvoiceService;
 import net.cis.service.EmailService;
 import net.cis.service.InvoiceService;
@@ -35,6 +36,9 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 	
 	@Autowired
 	EmailService emailService;
+	
+	@Autowired
+	CarParkingPlaceService carppService;
 	
 	@Autowired
 	EntityManager entityManager;
@@ -67,10 +71,11 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 					//Kiểm tra chỉ send email trong trường hợp không thể xuất hóa đơn thành công nhé, 
 					// edit lại content để lấy đúng thông tin cần thiết
 					StringBuilder emailContent = new StringBuilder();
-
+					String code = carppService.getCarPPCodeById(invoiceEntity.getCppId());
+					
 					emailContent.append("Không thể phát hành hóa đơn điện tử cho hóa đơn:<strong> " + invoiceEntity.getInvoiceCode() + "</strong>\n");
 					emailContent.append("Của khách hàng:<strong> " + invoiceEntity.getCustomerEmail() + " - " + invoiceEntity.getCustomerPhone() + " </strong>\n");
-					emailContent.append("Ở điểm đỗ:<strong> " + invoiceEntity.getCppId() + " </strong>\n");
+					emailContent.append("Ở điểm đỗ:<strong> " + code + " </strong>\n");
 					emailContent.append("Của vé: <strong> " + invoiceEntity.getTicketId() + " </strong>\n");
 					emailContent.append("Của giao dịch: <strong> " + invoiceEntity.getTransactionId() + " </strong>\n");
 					

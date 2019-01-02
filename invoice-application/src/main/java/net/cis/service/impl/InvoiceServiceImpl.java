@@ -755,18 +755,18 @@ public class InvoiceServiceImpl implements InvoiceService {
 		return invoice;
 	}
 
-	@Override
-	public void handleFailedInvoice() throws Exception {
-		List<EInvoiceEntity> eInvoices = eInvoiceService.getInvoiceFailed();
-		
-		for (EInvoiceEntity eInvoice : eInvoices) {
-			boolean isReCreated = reCreateInvoice(eInvoice);
-			if (isReCreated == false) {
-				eInvoiceService.updateEInvoiceStatus(eInvoice.getId(), BkavConfigurationConstant.INVOICE_STATUS_RECREATED_FAILED);
-			}
-		}
-		
-	}
+//	@Override
+//	public void handleFailedInvoice() throws Exception {
+//		List<EInvoiceEntity> eInvoices = eInvoiceService.getInvoiceFailed();
+//		
+//		for (EInvoiceEntity eInvoice : eInvoices) {
+//			boolean isReCreated = reCreateInvoice(eInvoice);
+//			if (isReCreated == false) {
+//				eInvoiceService.updateEInvoiceStatus(eInvoice.getId(), BkavConfigurationConstant.INVOICE_STATUS_RECREATED_FAILED);
+//			}
+//		}
+//		
+//	}
 	
 	@Override
 	public boolean reCreateInvoice(EInvoiceEntity eInvoice) throws Exception {

@@ -23,6 +23,7 @@ import net.cis.dto.CompanyInforDto;
 import net.cis.dto.EInvoiceDto;
 import net.cis.dto.ResponseDto;
 import net.cis.jpa.entity.EInvoiceEntity;
+import net.cis.service.CarParkingPlaceService;
 import net.cis.service.CompanyKeyService;
 import net.cis.service.EInvoiceService;
 import net.cis.service.InvoiceService;
@@ -43,6 +44,9 @@ public class CisInvoiceEndpoint {
 	
 	@Autowired
 	CompanyKeyService companyKeyService;
+	
+	@Autowired
+	CarParkingPlaceService carppService;
 	
 	@RequestMapping(value = "/create", method = RequestMethod.POST) 
 	@ResponseBody
@@ -238,4 +242,16 @@ public class CisInvoiceEndpoint {
 		return response;
 	}
 	
+	@RequestMapping(value = "/get_code", method = RequestMethod.GET)
+	@ResponseBody
+	public ResponseDto getCppCode(HttpServletRequest request, @RequestParam("cppId") String cppId) throws Exception {
+		
+		ResponseDto response = new ResponseDto();
+		
+		String code = carppService.getCarPPCodeById(cppId);
+		response.setData(code);
+		response.setError(new ResponseError(HttpServletResponse.SC_OK, ""));
+		
+		return response;
+	}
 }
