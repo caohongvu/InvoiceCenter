@@ -236,9 +236,44 @@ public class InvoiceServiceImpl implements InvoiceService {
 		return isCanceled;
 	}
 	
+	@Override
+	public boolean editInvoice(BkavTicketDto bkavTicketDto) throws Exception {	
+		bkavTicketDto.setPartnerInvoiceStringId(BkavInvoiceUtil.generateGuidString());
+		CommandDataEntity commandDataEntity = prepareDataForEditInvoice(bkavTicketDto);
+
+		int companyId = bkavTicketDto.getProviderId();
+	 	CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(companyId);
+	 	String encryptedCommandData = encryptionService.doEncryptedCommandData(commandDataEntity, companyKeyEntity.getPartnerToken());
+		
+		BkavRequest bkavRequest = new BkavRequest();
+		bkavRequest.setPartnerGUID(companyKeyEntity.getPartnerGuid());
+		bkavRequest.setCommandData(encryptedCommandData);
+		bkavRequest.setUrl(configurationCache.get("URL"));
+		
+		// Call BKAV Third Party 
+		BkavResponse bkavResponse = new BkavResponse();
+		bkavResponse = bkavExecCommand.doExecCommand(bkavRequest);
+	
+		String decryptedResult = bkavResponse.getDecryptedResult();
+		String result = encryptionService.doDecryptedCommamdData(decryptedResult, companyKeyEntity.getPartnerToken());
+		System.out.println(result);
+		
+		// Parse to Object
+		JSONObject jsonObject = new JSONObject(result);
+		
+		int status = (int) jsonObject.get("Status");
+		boolean isOk = jsonObject.getBoolean("isOk");
+		boolean isError = jsonObject.getBoolean("isError");
+		
+		if (status == 0 && isOk == true && isError == false) {
+			return true;
+		} 
+		
+		return false;
+	}
 	
 	@Override
-	public BkavResult getInvoiceDetail(String invoiceGUID) throws Exception {
+	public InvoiceDetailResult getInvoiceDetail(String invoiceGUID) throws Exception {
 		BkavResult bkavResult = new BkavResult();
 		
 		// Prepare Command Data
@@ -246,23 +281,9 @@ public class InvoiceServiceImpl implements InvoiceService {
 		
 		// Get Token and Partner GUID by company
 	 	EInvoiceEntity eInvoiceEntity = eInvoiceService.getByInvoiceGUID(invoiceGUID);
-	 	if (eInvoiceEntity == null) {
-	 		bkavResult.setIsError(false);
-			bkavResult.setStatus(0);
-			bkavResult.setIsOk(false);
-			bkavResult.setResult("Invoice GUID không tồn tại");
-			return bkavResult;
-	 	}
-	 	
+	 
 	 	int companyId = eInvoiceEntity.getProviderId();
 	 	CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(companyId);
-	 	if (companyKeyEntity == null) {
-	 		bkavResult.setIsError(false);
-			bkavResult.setStatus(0);
-			bkavResult.setIsOk(false);
-			bkavResult.setResult("Công ty không tồn tại");
-			return bkavResult;
-	 	}
 		
 	 	String partnerToken = companyKeyEntity.getPartnerToken();
 		
@@ -296,6 +317,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		
 		String strObject = jsonObject.get("Object").toString();
 		System.out.println(strObject);
+		InvoiceDetailResult invoiceDetailResult = new InvoiceDetailResult();
 		
 		if (status == 0 && isOk == true && isError == false) {
 			// Parse Invoice Detail with Object Invoice Detail
@@ -312,8 +334,6 @@ public class InvoiceServiceImpl implements InvoiceService {
 			// Parse Invoice Attach File WS
 			List<InvoiceAttachFileWS> listInvoiceAttachFileWS = parseListInvoiceAttachFileWSFromJson(strListInvoiceAttachFileWS);
 			
-			
-			InvoiceDetailResult invoiceDetailResult = new InvoiceDetailResult();
 			invoiceDetailResult.setInvoiceDetail(invoiceDetail);
 			invoiceDetailResult.setListInvoiceDetailsWSResult(listInvoiceDetailsWSResult);
 			invoiceDetailResult.setListInvoiceAttachFileWS(listInvoiceAttachFileWS);
@@ -334,14 +354,9 @@ public class InvoiceServiceImpl implements InvoiceService {
 			invoiceDetailResult.setIsIASendSMS(jsonResult.getBoolean("IsIASendSMS"));
 			invoiceDetailResult.setTransactionStringID(jsonResult.getString("TransactionStringID"));
 			
-			bkavResult.setResult(invoiceDetailResult);
 			
-		} else {
-			// Error, Parse with Error Object
-			bkavResult.setResult(null);
-		}
-		
-		return bkavResult;
+		} 
+		return invoiceDetailResult;
 	}
 
 	@Override
@@ -534,6 +549,25 @@ public class InvoiceServiceImpl implements InvoiceService {
 			invoiceDetailsWS.setTaxAmount(BkavInvoiceUtil.calculareTaxAmount(0.1, amount));
 			listInvoiceDetailsWS.add(invoiceDetailsWS);
 		}
+		
+		return listInvoiceDetailsWS;
+	}
+	
+	public static List<InvoiceDetailsWS> prepareListInvoiceDetailsWS(String itemName) {
+		List<InvoiceDetailsWS> listInvoiceDetailsWS = new ArrayList<InvoiceDetailsWS>();
+		
+		InvoiceDetailsWS invoiceDetailsWS = new InvoiceDetailsWS();
+
+		invoiceDetailsWS.setQty(0);
+		invoiceDetailsWS.setAmount(0);
+		invoiceDetailsWS.setPrice(0);
+		invoiceDetailsWS.setIsDiscount(false);
+		invoiceDetailsWS.setIsIncrease(null);
+		invoiceDetailsWS.setItemName(itemName);
+		invoiceDetailsWS.setUnitName("");
+		invoiceDetailsWS.setTaxRateID(BkavTaxRateConstant.TAX_BY_10_PERCENTAGE);
+		invoiceDetailsWS.setTaxAmount(0);
+		listInvoiceDetailsWS.add(invoiceDetailsWS);
 		
 		return listInvoiceDetailsWS;
 	}
@@ -754,19 +788,6 @@ public class InvoiceServiceImpl implements InvoiceService {
 
 		return invoice;
 	}
-
-//	@Override
-//	public void handleFailedInvoice() throws Exception {
-//		List<EInvoiceEntity> eInvoices = eInvoiceService.getInvoiceFailed();
-//		
-//		for (EInvoiceEntity eInvoice : eInvoices) {
-//			boolean isReCreated = reCreateInvoice(eInvoice);
-//			if (isReCreated == false) {
-//				eInvoiceService.updateEInvoiceStatus(eInvoice.getId(), BkavConfigurationConstant.INVOICE_STATUS_RECREATED_FAILED);
-//			}
-//		}
-//		
-//	}
 	
 	@Override
 	public boolean reCreateInvoice(EInvoiceEntity eInvoice) throws Exception {
@@ -816,4 +837,50 @@ public class InvoiceServiceImpl implements InvoiceService {
 		
 		return isCreated;
 	}
+
+	@Override
+	public CommandDataEntity prepareDataForEditInvoice(BkavTicketDto bkavTicketDto) throws Exception {
+		List<CommandObject> listCommandObject = new ArrayList<CommandObject>();
+		
+		List<EInvoiceEntity> eInvoices = eInvoiceService.getByTicketId(bkavTicketDto.getTicketId());
+		for (EInvoiceEntity eInvoice : eInvoices) {
+			CommandObject commandObject = new CommandObject();
+			
+			InvoiceDetailResult invoiceDetailResult = getInvoiceDetail(eInvoice.getInvoiceGUID());
+			Integer invoiceNo = invoiceDetailResult.getInvoiceDetail().getInvoiceNo();
+			
+			Invoice invoice = prepareInvoiceData(bkavTicketDto);
+			
+			invoice.setOriginalInvoiceIdentify(BkavConfigurationConstant.INVOICE_FORM + "_" + BkavConfigurationConstant.INVOICE_SERIAL + "_" + invoiceNo);
+			
+			
+			SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+			String str = dateFormat.format(new Date());
+			
+			String itemName = "Điều chỉnh MST của hóa đơn số {0}, ký hiệu số {1}, ngày {2}";
+			itemName = itemName.replace("{0}", invoiceNo.toString());
+			itemName = itemName.replace("{1}", BkavConfigurationConstant.INVOICE_SERIAL);
+			itemName = itemName.replace("{2}", str);
+			
+			commandObject.setInvoice(invoice);
+			commandObject.setPartnerInvoiceID(0);
+			commandObject.setPartnerInvoiceStringID(bkavTicketDto.getPartnerInvoiceStringId());
+			commandObject.setListInvoiceAttachFileWS(prepareInvoiceAttachFileWS());
+			commandObject.setListInvoiceDetailsWS(prepareListInvoiceDetailsWS(itemName));
+			commandObject.setPartnerInvoiceStringID(bkavTicketDto.getPartnerInvoiceStringId());
+			
+			listCommandObject.add(commandObject);
+		}
+		
+		ObjectMapper mapper = new ObjectMapper();
+		String strCommandData = mapper.writeValueAsString(listCommandObject);
+		
+		CommandDataEntity commandDataEntity = new CommandDataEntity();
+		commandDataEntity.setCmdType(InvoiceCmdType.EDIT_INVOICE);
+		commandDataEntity.setCommandObject(strCommandData);
+
+		return commandDataEntity;
+	}
+
+	
 }

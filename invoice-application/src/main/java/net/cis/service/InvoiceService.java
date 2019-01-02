@@ -10,6 +10,7 @@ import net.cis.bkav.entity.CommandDataEntity;
 import net.cis.bkav.entity.Invoice;
 import net.cis.bkav.entity.InvoiceAttachFileWS;
 import net.cis.bkav.entity.InvoiceDetail;
+import net.cis.bkav.entity.InvoiceDetailResult;
 import net.cis.bkav.entity.InvoiceDetailsWSResult;
 import net.cis.dto.BkavTicketDto;
 import net.cis.dto.CompanyInforDto;
@@ -24,11 +25,11 @@ public interface InvoiceService {
 	
 	boolean reCreateInvoice(EInvoiceEntity eInvoice) throws Exception;
 	
-//	void handleFailedInvoice() throws Exception;
+	boolean editInvoice(BkavTicketDto bkavTicketDto) throws Exception;
     
 	boolean cancelInvoice(String invoiceGUID) throws Exception;
     
-    BkavResult getInvoiceDetail(String invoiceGUID) throws Exception;
+	InvoiceDetailResult getInvoiceDetail(String invoiceGUID) throws Exception;
     
     BkavResult getInvoiceStatus(String invoiceGUID) throws Exception;
     
@@ -45,6 +46,8 @@ public interface InvoiceService {
     CommandDataEntity prepareDataForGettingInvoiceDetail(String invoiceGUID);
     
     CommandDataEntity prepareDataForGettingInvoiceStatus(String invoiceGUID);
+    
+    CommandDataEntity prepareDataForEditInvoice(BkavTicketDto bkavTicketDto) throws Exception;
     
     CommandDataEntity prepareDataForGettingInvoiceHistory(String invoiceGUID);
     

@@ -99,7 +99,7 @@ public class CisInvoiceEndpoint {
 	public BkavResult getInvoiceDetail(HttpServletRequest request, @RequestParam("invoiceGUID") String invoiceGUID) throws Exception {
 		
 		BkavResult bkavResult = new BkavResult();
-		bkavResult = invoiceService.getInvoiceDetail(invoiceGUID);
+		// bkavResult = invoiceService.getInvoiceDetail(invoiceGUID);
 		
 		return bkavResult;
 	}
@@ -233,11 +233,12 @@ public class CisInvoiceEndpoint {
 	
 	@RequestMapping(value = "/edit", method = RequestMethod.POST)
 	@ResponseBody
-	public ResponseDto editInvoice(HttpServletRequest request, @RequestParam("ticketId") String ticketId, 
-																@RequestParam("tranId") String tranId) throws Exception {
+	public ResponseDto editInvoice(HttpServletRequest request, @RequestBody BkavTicketDto bkavTicketDto) throws Exception {
 		
 		ResponseDto response = new ResponseDto();
 		
+		boolean isEdit = invoiceService.editInvoice(bkavTicketDto);
+		System.out.println(isEdit);
 		
 		return response;
 	}
