@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import net.cis.bkav.BkavExecCommand;
 import net.cis.bkav.entity.BkavRequest;
 import net.cis.bkav.entity.BkavResponse;
@@ -240,6 +239,42 @@ public class InvoiceServiceImpl implements InvoiceService {
 	public boolean editInvoice(BkavTicketDto bkavTicketDto) throws Exception {	
 		bkavTicketDto.setPartnerInvoiceStringId(BkavInvoiceUtil.generateGuidString());
 		CommandDataEntity commandDataEntity = prepareDataForEditInvoice(bkavTicketDto);
+
+		int companyId = bkavTicketDto.getProviderId();
+	 	CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(companyId);
+	 	String encryptedCommandData = encryptionService.doEncryptedCommandData(commandDataEntity, companyKeyEntity.getPartnerToken());
+		
+		BkavRequest bkavRequest = new BkavRequest();
+		bkavRequest.setPartnerGUID(companyKeyEntity.getPartnerGuid());
+		bkavRequest.setCommandData(encryptedCommandData);
+		bkavRequest.setUrl(configurationCache.get("URL"));
+		
+		// Call BKAV Third Party 
+		BkavResponse bkavResponse = new BkavResponse();
+		bkavResponse = bkavExecCommand.doExecCommand(bkavRequest);
+	
+		String decryptedResult = bkavResponse.getDecryptedResult();
+		String result = encryptionService.doDecryptedCommamdData(decryptedResult, companyKeyEntity.getPartnerToken());
+		System.out.println(result);
+		
+		// Parse to Object
+		JSONObject jsonObject = new JSONObject(result);
+		
+		int status = (int) jsonObject.get("Status");
+		boolean isOk = jsonObject.getBoolean("isOk");
+		boolean isError = jsonObject.getBoolean("isError");
+		
+		if (status == 0 && isOk == true && isError == false) {
+			return true;
+		} 
+		
+		return false;
+	}
+	
+	@Override
+	public boolean replaceInvoice(BkavTicketDto bkavTicketDto) throws Exception {	
+		// bkavTicketDto.setPartnerInvoiceStringId(BkavInvoiceUtil.generateGuidString());
+		CommandDataEntity commandDataEntity = prepareDataForReplaceInvoice(bkavTicketDto);
 
 		int companyId = bkavTicketDto.getProviderId();
 	 	CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(companyId);
@@ -882,5 +917,61 @@ public class InvoiceServiceImpl implements InvoiceService {
 		return commandDataEntity;
 	}
 
+	@Override
+	public CommandDataEntity prepareDataForReplaceInvoice(BkavTicketDto bkavTicketDto) throws Exception {
+		List<CommandObject> listCommandObject = new ArrayList<CommandObject>();
+		
+		List<EInvoiceEntity> eInvoices = eInvoiceService.getByTicketId(bkavTicketDto.getTicketId());
+		for (EInvoiceEntity eInvoice : eInvoices) {
+			CommandObject commandObject = new CommandObject();
+			
+			InvoiceDetailResult invoiceDetailResult = getInvoiceDetail(eInvoice.getInvoiceGUID());
+			Integer invoiceNo = invoiceDetailResult.getInvoiceDetail().getInvoiceNo();
+			
+			JSONObject jsonObject = new JSONObject(eInvoice.getRequestBody());
+			String strCommandObject = jsonObject.getString("CommandObject");
+			
+			JSONArray jsonItemArr = new JSONArray(strCommandObject);
+			JSONArray jsonItemDetail = jsonItemArr.getJSONObject(0).getJSONArray("ListInvoiceDetailsWS");	
+			List<InvoiceDetailsWS> listInvoiceDetailsWS = new ArrayList<InvoiceDetailsWS>();
+			for (int i = 0; i < jsonItemDetail.length(); i++) {
+				JSONObject itemDetail = jsonItemDetail.getJSONObject(i);
+		
+				InvoiceDetailsWS ws = new InvoiceDetailsWS();
+				ws.setAmount(itemDetail.getInt("Amount"));
+				ws.setIsDiscount(itemDetail.getBoolean("IsDiscount"));
+				ws.setItemName(itemDetail.getString("ItemName"));
+				ws.setPrice(itemDetail.getInt("Price"));
+				ws.setQty(itemDetail.getInt("Qty"));
+				ws.setTaxAmount(itemDetail.getInt("TaxAmount"));
+				ws.setTaxRateID(itemDetail.getInt("TaxRateID"));
+				ws.setUnitName(itemDetail.getString("UnitName"));
+				
+				listInvoiceDetailsWS.add(ws);
+			}
+			
+			Invoice invoice = prepareInvoiceData(bkavTicketDto);
+			invoice.setOriginalInvoiceIdentify(BkavConfigurationConstant.INVOICE_FORM + "_" + BkavConfigurationConstant.INVOICE_SERIAL + "_" + invoiceNo);
+			invoice.setBuyerTaxCode(bkavTicketDto.getBuyerTaxCode());
+			
+			commandObject.setInvoice(invoice);
+			commandObject.setPartnerInvoiceID(0);
+			commandObject.setPartnerInvoiceStringID(BkavInvoiceUtil.generateGuidString());
+			commandObject.setListInvoiceAttachFileWS(prepareInvoiceAttachFileWS());
+			commandObject.setListInvoiceDetailsWS(listInvoiceDetailsWS);
+
+			listCommandObject.add(commandObject);
+		}
+		
+		ObjectMapper mapper = new ObjectMapper();
+		String strCommandData = mapper.writeValueAsString(listCommandObject);
+		
+		CommandDataEntity commandDataEntity = new CommandDataEntity();
+		commandDataEntity.setCmdType(InvoiceCmdType.REPLACE_INVOICE);
+		commandDataEntity.setCommandObject(strCommandData);
+
+		return commandDataEntity;
+	}
+	
 	
 }

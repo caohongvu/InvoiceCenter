@@ -26,6 +26,8 @@ public interface InvoiceService {
 	boolean reCreateInvoice(EInvoiceEntity eInvoice) throws Exception;
 	
 	boolean editInvoice(BkavTicketDto bkavTicketDto) throws Exception;
+	
+	boolean replaceInvoice(BkavTicketDto bkavTicketDto) throws Exception;
     
 	boolean cancelInvoice(String invoiceGUID) throws Exception;
     
@@ -48,6 +50,8 @@ public interface InvoiceService {
     CommandDataEntity prepareDataForGettingInvoiceStatus(String invoiceGUID);
     
     CommandDataEntity prepareDataForEditInvoice(BkavTicketDto bkavTicketDto) throws Exception;
+    
+    CommandDataEntity prepareDataForReplaceInvoice(BkavTicketDto bkavTicketDto) throws Exception;
     
     CommandDataEntity prepareDataForGettingInvoiceHistory(String invoiceGUID);
     

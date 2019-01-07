@@ -243,6 +243,20 @@ public class CisInvoiceEndpoint {
 		return response;
 	}
 	
+	@RequestMapping(value = "/replace", method = RequestMethod.POST)
+	@ResponseBody
+	public ResponseDto replaceInvoice(HttpServletRequest request, @RequestBody BkavTicketDto bkavTicketDto) throws Exception {
+		ResponseDto response = new ResponseDto();
+		
+		boolean isReplace = invoiceService.replaceInvoice(bkavTicketDto);
+		if (isReplace == true) {
+			response.setError(new ResponseError(HttpServletResponse.SC_OK, ""));
+			response.setData("");
+		}
+		
+		return response;
+	}
+	
 	@RequestMapping(value = "/get_code", method = RequestMethod.GET)
 	@ResponseBody
 	public ResponseDto getCppCode(HttpServletRequest request, @RequestParam("cppId") String cppId) throws Exception {
