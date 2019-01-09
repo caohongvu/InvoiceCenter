@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
+import javax.persistence.EntityManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import net.cis.bkav.BkavExecCommand;
 import net.cis.bkav.entity.BkavRequest;
 import net.cis.bkav.entity.BkavResponse;
@@ -77,6 +79,9 @@ public class InvoiceServiceImpl implements InvoiceService {
 	
 	@Autowired
 	ConfigurationCache configurationCache;
+	
+	@Autowired
+	EntityManager entityManager;
 	
 	@PostConstruct
 	public void initialize() {
@@ -810,7 +815,12 @@ public class InvoiceServiceImpl implements InvoiceService {
 		invoice.setInvoiceTypeID(BkavConfigurationConstant.INVOICE_TYPE_ID);
 		invoice.setNote(BkavConfigurationConstant.INVOICE_NOTE);
 		invoice.setOriginalInvoiceIdentify(BkavConfigurationConstant.ORIGINAL_INVOICE_IDENTIFY);
-		invoice.setPayMethodID(ReceiveInvoiceTypeConstant.PAY_BY_CREDIT_TRANSFER);
+		if (bkavTicketDto.getIsMonthly() == 1) {
+			invoice.setPayMethodID(ReceiveInvoiceTypeConstant.PAY_BY_CASH_AND_CREDIT_TRANSFER);
+		} else {
+			invoice.setPayMethodID(ReceiveInvoiceTypeConstant.PAY_BY_CREDIT_TRANSFER);
+		}
+		
 		invoice.setReceiverAddress(bkavTicketDto.getReceiverAddress());
 		invoice.setReceiverEmail(bkavTicketDto.getReceiverEmail());
 		invoice.setReceiverMobile(BkavInvoiceUtil.convertPhoneNumber(bkavTicketDto.getReceiverMobile()));
@@ -971,6 +981,18 @@ public class InvoiceServiceImpl implements InvoiceService {
 		commandDataEntity.setCommandObject(strCommandData);
 
 		return commandDataEntity;
+	}
+
+	@Override
+	public int getMonthlyInvoice(String ticketId) {
+		
+//		String sql = "SELECT e.transactionId FROM EInvoiceEntity e WHERE e.ticketId = " + ticketId + " order by e.id desc";
+//
+//		
+//		Query query = entityManager.createQuery(sql);
+//		String result = query.getFirstResult();
+		
+		return 0;
 	}
 	
 	

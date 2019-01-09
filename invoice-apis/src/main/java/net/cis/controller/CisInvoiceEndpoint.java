@@ -19,6 +19,7 @@ import net.cis.bkav.entity.BkavResult;
 import net.cis.common.web.ResponseError;
 import net.cis.dto.BkavCancelDto;
 import net.cis.dto.BkavTicketDto;
+import net.cis.dto.CheckTicketDto;
 import net.cis.dto.CompanyInforDto;
 import net.cis.dto.EInvoiceDto;
 import net.cis.dto.ResponseDto;
@@ -266,6 +267,23 @@ public class CisInvoiceEndpoint {
 		String code = carppService.getCarPPCodeById(cppId);
 		response.setData(code);
 		response.setError(new ResponseError(HttpServletResponse.SC_OK, ""));
+		
+		return response;
+	}
+	
+	@RequestMapping(value = "/check", method = RequestMethod.POST)
+	@ResponseBody
+	public ResponseDto getMonthlyOfTicket(HttpServletRequest request, @RequestBody CheckTicketDto dto) throws Exception {
+		
+		ResponseDto response = new ResponseDto();
+		EInvoiceEntity entity = eInvoiceService.getByTicketIdAndTranId(dto.getTicketId(), dto.getTransactionId());
+		if (entity == null) {
+			response.setError(new ResponseError(HttpServletResponse.SC_OK, ""));
+			response.setData("OK");
+			return response;
+		}
+		response.setError(new ResponseError(HttpServletResponse.SC_BAD_GATEWAY, ""));
+		response.setData("ERROR");
 		
 		return response;
 	}
