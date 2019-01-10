@@ -40,6 +40,7 @@ import net.cis.dto.BkavTicketDto;
 import net.cis.dto.CancelInvoice;
 import net.cis.dto.CancelInvoiceDto;
 import net.cis.dto.CompanyInforDto;
+import net.cis.dto.UpdateInvoiceDto;
 import net.cis.jpa.entity.CompanyKeyEntity;
 import net.cis.jpa.entity.ConfigurationEntity;
 import net.cis.jpa.entity.EInvoiceEntity;
@@ -51,6 +52,8 @@ import net.cis.service.EInvoiceService;
 import net.cis.service.EncryptionService;
 import net.cis.service.InvoiceService;
 import net.cis.service.cache.ConfigurationCache;
+import net.cis.util.InvoiceCenterApplicationUtil;
+import net.cis.utils.RestfulUtil;
 /**
  * Created by NhanNguyen on 19/10/2018
  */
@@ -140,6 +143,16 @@ public class InvoiceServiceImpl implements InvoiceService {
 				}
 				
 				invoiceCode = successObject.getString("MTC");
+				
+				// Trigger IPARKING CENTER to Update InvoiceCode
+				UpdateInvoiceDto dto = new UpdateInvoiceDto();
+				dto.setTicketId(bkavTicketDto.getTicketId());
+				dto.setTransactionId(bkavTicketDto.getTransactionId());
+				dto.setInvoiceCode(invoiceCode);
+				
+				String strData = mapper.writeValueAsString(dto);
+				JSONObject json = new JSONObject(strData);
+				RestfulUtil.post(InvoiceCenterApplicationUtil.UPDATE_INVOICE_IPARKING_CENTER, json, "application/json");
 			}
 		} 
 		if (status == 1) {
@@ -994,6 +1007,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		
 		return 0;
 	}
+
 	
 	
 }
