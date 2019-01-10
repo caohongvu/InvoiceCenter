@@ -2,18 +2,14 @@
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
 xmlns="http://java.sun.com/xml/ns/javaee" 
 xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" version="3.0">
-  <display-name>CIS NFC Platform 1.0</display-name>
-  <description>CIS NFC Platform</description>
+  <display-name>CIS Invoice Center</display-name>
+  <description>CIS Invoice Center</description>
   <context-param>
     <param-name>contextConfigLocation</param-name>
     <param-value>
             /WEB-INF/mvc-dispatcher-servlet.xml
             classpath*:application.context.xml
         </param-value>
-  </context-param>
-  <context-param>
-    <param-name>contextInitializerClasses</param-name>
-    <param-value>net.cis.SpringProfilesActiveApplicationContextInitializer</param-value>
   </context-param>
   <listener>
     <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
@@ -34,16 +30,4 @@ xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns
     <filter-name>CORSFilter</filter-name>
     <url-pattern>/*</url-pattern>
   </filter-mapping>
-<!--   <filter> -->
-<!-- 	    <filter-name>springSecurityFilterChain</filter-name> -->
-<!-- 	    <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class> -->
-<!-- 	    <init-param> -->
-<!-- 	      <param-name>contextAttribute</param-name> -->
-<!-- 	      <param-value>org.springframework.web.servlet.FrameworkServlet.CONTEXT.mvc-dispatcher</param-value> -->
-<!-- 	    </init-param> -->
-<!--   </filter> -->
-<!--   <filter-mapping> -->
-<!-- 	    <filter-name>springSecurityFilterChain</filter-name> -->
-<!-- 	    <url-pattern>/*</url-pattern> -->
-<!--   </filter-mapping> -->
 </web-app>

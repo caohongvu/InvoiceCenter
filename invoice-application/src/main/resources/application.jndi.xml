@@ -7,5 +7,4 @@
         http://www.springframework.org/schema/jee
         http://www.springframework.org/schema/jee/spring-jee.xsd">
 
-    <jee:jndi-lookup id="paymentSpringProfilesActive" jndi-name="java:/comp/env/payment/springProfilesActive" expected-type="java.lang.String"/>
 </beans>
