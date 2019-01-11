@@ -145,14 +145,17 @@ public class InvoiceServiceImpl implements InvoiceService {
 				invoiceCode = successObject.getString("MTC");
 				
 				// Trigger IPARKING CENTER to Update InvoiceCode
-				UpdateInvoiceDto dto = new UpdateInvoiceDto();
-				dto.setTicketId(bkavTicketDto.getTicketId());
-				dto.setTransactionId(bkavTicketDto.getTransactionId());
-				dto.setInvoiceCode(invoiceCode);
+				if (bkavTicketDto.getIsMonthly() == 0) {
+					UpdateInvoiceDto dto = new UpdateInvoiceDto();
+					dto.setTicketId(bkavTicketDto.getTicketId());
+					dto.setTransactionId(bkavTicketDto.getTransactionId());
+					dto.setInvoiceCode(invoiceCode);
+					
+					String strData = mapper.writeValueAsString(dto);
+					JSONObject json = new JSONObject(strData);
+					RestfulUtil.post(InvoiceCenterApplicationUtil.UPDATE_INVOICE_IPARKING_CENTER, json, "application/json");
+				}
 				
-				String strData = mapper.writeValueAsString(dto);
-				JSONObject json = new JSONObject(strData);
-				RestfulUtil.post(InvoiceCenterApplicationUtil.UPDATE_INVOICE_IPARKING_CENTER, json, "application/json");
 			}
 		} 
 		if (status == 1) {
@@ -996,17 +999,6 @@ public class InvoiceServiceImpl implements InvoiceService {
 		return commandDataEntity;
 	}
 
-	@Override
-	public int getMonthlyInvoice(String ticketId) {
-		
-//		String sql = "SELECT e.transactionId FROM EInvoiceEntity e WHERE e.ticketId = " + ticketId + " order by e.id desc";
-//
-//		
-//		Query query = entityManager.createQuery(sql);
-//		String result = query.getFirstResult();
-		
-		return 0;
-	}
 
 	
 	

@@ -20,7 +20,7 @@ public class CarParkingPlaceServiceImpl implements CarParkingPlaceService {
 		String url = InvoiceCenterApplicationUtil.GET_CPP_CODE_BY_CPP_ID;
 		url = url.replace("{id}", id);
 		
-		String response = RestfulUtil.getWithOutAccessToke(url, "application/json");
+		String response = RestfulUtil.get(url, "application/json");
 		JSONObject jsonObject = new JSONObject(response);
 		
 		carppCode = jsonObject.getString("parkingCode");

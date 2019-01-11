@@ -65,7 +65,5 @@ public interface InvoiceService {
     List<InvoiceDetailsWSResult> parseListInvoiceDetailsWSFromJson(String strListInvoiceDetailsWS) throws JSONException;
     
     List<InvoiceAttachFileWS> parseListInvoiceAttachFileWSFromJson(String strListInvoiceAttachFileWS) throws JSONException;
-    
-    int getMonthlyInvoice(String ticketId);
 }
  
