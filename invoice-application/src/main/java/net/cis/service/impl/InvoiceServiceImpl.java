@@ -595,7 +595,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 			invoiceDetailsWS.setUnitName(BkavConfigurationConstant.INVOICE_MONTHLY_UNIT_NAME);
 			String itemName = "Dịch vụ trông giữ ô tô tại điểm đỗ {0} tháng {1} năm {2}";
 			Calendar now = Calendar.getInstance();
-			Integer month = now.get(Calendar.MONTH + 1);
+			Integer month = now.get(Calendar.MONTH) + 1;
 			Integer year = now.get(Calendar.YEAR);
 			
 			itemName = itemName.replace("{0}", bkavTicketDto.getCppCode());
