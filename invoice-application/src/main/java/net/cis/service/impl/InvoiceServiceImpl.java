@@ -1,7 +1,10 @@
 package net.cis.service.impl;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -117,7 +120,6 @@ public class InvoiceServiceImpl implements InvoiceService {
 	
 		String decryptedResult = bkavResponse.getDecryptedResult();
 		String result = encryptionService.doDecryptedCommamdData(decryptedResult, companyKeyEntity.getPartnerToken());
-		System.out.println(result);
 		
 		// Parse to Object
 		JSONObject jsonObject = new JSONObject(result);
@@ -144,7 +146,6 @@ public class InvoiceServiceImpl implements InvoiceService {
 				
 				invoiceCode = successObject.getString("MTC");
 				
-				// Trigger IPARKING CENTER to Update InvoiceCode
 				if (bkavTicketDto.getIsMonthly() == 0) {
 					UpdateInvoiceDto dto = new UpdateInvoiceDto();
 					dto.setTicketId(bkavTicketDto.getTicketId());
@@ -154,8 +155,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 					String strData = mapper.writeValueAsString(dto);
 					JSONObject json = new JSONObject(strData);
 					RestfulUtil.post(InvoiceCenterApplicationUtil.UPDATE_INVOICE_IPARKING_CENTER, json, "application/json");
-				}
-				
+				}			
 			}
 		} 
 		if (status == 1) {
@@ -580,11 +580,36 @@ public class InvoiceServiceImpl implements InvoiceService {
 		return null;
 	}
 	
-	public static List<InvoiceDetailsWS> prepareListInvoiceDetailsWS(BkavTicketDto bkavTicketDto) {
+	public static List<InvoiceDetailsWS> prepareListInvoiceDetailsWS(BkavTicketDto bkavTicketDto) throws Exception {
 		List<InvoiceDetailsWS> listInvoiceDetailsWS = new ArrayList<InvoiceDetailsWS>();
 		
 		List<PaymentConfig> paymentConfigs = bkavTicketDto.getPaymentConfiguration();
 		
+		if (bkavTicketDto.getType().equals("MONTHLY_AUTO")) {
+			InvoiceDetailsWS invoiceDetailsWS = new InvoiceDetailsWS();
+			int price = BkavInvoiceUtil.calculatePriceBeforeTax((int)(bkavTicketDto.getTransactionAmount()));
+			int amount = BkavInvoiceUtil.calculateAmount(price, 1);
+			invoiceDetailsWS.setQty(1);
+			invoiceDetailsWS.setAmount(amount);
+			invoiceDetailsWS.setPrice(price);
+			invoiceDetailsWS.setIsDiscount(false);
+			invoiceDetailsWS.setIsIncrease(null);
+			invoiceDetailsWS.setUnitName(BkavConfigurationConstant.INVOICE_MONTHLY_UNIT_NAME);
+			String itemName = "Dịch vụ trông giữ ô tô tại điểm đỗ {0} tháng {1} năm {2}";
+			Calendar now = Calendar.getInstance();
+			Integer month = now.get(Calendar.MONTH + 1);
+			Integer year = now.get(Calendar.YEAR);
+			
+			itemName = itemName.replace("{0}", bkavTicketDto.getCppCode());
+			itemName = itemName.replace("{1}", month.toString());
+			itemName = itemName.replace("{2}", year.toString());
+			invoiceDetailsWS.setItemName(itemName);
+			invoiceDetailsWS.setTaxRateID(BkavTaxRateConstant.TAX_BY_10_PERCENTAGE);
+			invoiceDetailsWS.setTaxAmount(BkavInvoiceUtil.calculareTaxAmount(0.1, amount));
+			listInvoiceDetailsWS.add(invoiceDetailsWS);
+			
+			return listInvoiceDetailsWS;
+		}
 		for (PaymentConfig item : paymentConfigs) {
 			InvoiceDetailsWS invoiceDetailsWS = new InvoiceDetailsWS();
 			int price = BkavInvoiceUtil.calculatePriceBeforeTax(item.getPrice());
@@ -786,7 +811,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 	}
 
 	@Override
-	public CommandDataEntity prepareDataForCreatingInvoice(BkavTicketDto bkavTicketDto) throws JsonProcessingException {
+	public CommandDataEntity prepareDataForCreatingInvoice(BkavTicketDto bkavTicketDto) throws Exception {
 		List<CommandObject> listCommandObject = new ArrayList<CommandObject>();
 
 		CommandObject commandObject = new CommandObject();

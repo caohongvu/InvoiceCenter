@@ -44,7 +44,7 @@ public interface InvoiceService {
     
     CompanyInforDto getCompanyInformationByTaxCode(String taxCode, long providerId) throws Exception;
     
-    CommandDataEntity prepareDataForCreatingInvoice(BkavTicketDto bkavTicketDto) throws JsonProcessingException;
+    CommandDataEntity prepareDataForCreatingInvoice(BkavTicketDto bkavTicketDto) throws JsonProcessingException, Exception;
     
     CommandDataEntity prepareDataForGettingInvoiceDetail(String invoiceGUID);
     

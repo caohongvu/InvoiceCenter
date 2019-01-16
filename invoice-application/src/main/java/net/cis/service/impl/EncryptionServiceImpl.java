@@ -72,7 +72,6 @@ public class EncryptionServiceImpl implements EncryptionService {
 		// Convert to JSON
 		ObjectMapper mapper = new ObjectMapper();
 		String strCommandData = mapper.writeValueAsString(commandDataEntity);
-		System.out.println(strCommandData);
 
 		// Zip Object CommandData
 		byte[] zipCommandData = compressionService.compress(strCommandData);

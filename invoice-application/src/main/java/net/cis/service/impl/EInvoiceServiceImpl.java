@@ -85,6 +85,18 @@ public class EInvoiceServiceImpl implements EInvoiceService {
 		}
 	}
 	
+	@Scheduled(fixedDelay=5*60*1000)
+	private void sendInvoice() throws Exception {
+		// Get List company
+		
+		
+		// Get List Car Parking Place
+		
+		
+		// Get List Ticket
+		
+	}
+	
 	@Override
 	public long createEInvoice(BkavTicketDto bkavTicketDto) {
 		EInvoiceEntity eInvoice = parseEInvoice(bkavTicketDto);
