@@ -582,8 +582,8 @@ public class InvoiceServiceImpl implements InvoiceService {
 		List<InvoiceDetailsWS> listInvoiceDetailsWS = new ArrayList<InvoiceDetailsWS>();
 		
 		List<PaymentConfig> paymentConfigs = bkavTicketDto.getPaymentConfiguration();
-		
-		if (bkavTicketDto.getType().equals("MONTHLY_AUTO")) {
+
+		if (bkavTicketDto.getType() != null && bkavTicketDto.getType().equals("MONTHLY_AUTO")) {
 			InvoiceDetailsWS invoiceDetailsWS = new InvoiceDetailsWS();
 			int price = BkavInvoiceUtil.calculatePriceBeforeTax((int)(bkavTicketDto.getTransactionAmount()));
 			int amount = BkavInvoiceUtil.calculateAmount(price, 1);
