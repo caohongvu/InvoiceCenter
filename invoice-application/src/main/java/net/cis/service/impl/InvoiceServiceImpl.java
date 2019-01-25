@@ -585,7 +585,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
 		if (bkavTicketDto.getType() != null && bkavTicketDto.getType().equals("MONTHLY_AUTO")) {
 			InvoiceDetailsWS invoiceDetailsWS = new InvoiceDetailsWS();
-			int price = BkavInvoiceUtil.calculatePriceBeforeTax((int)(bkavTicketDto.getTransactionAmount()));
+			int price = BkavInvoiceUtil.calculatePriceBeforeTax((int)bkavTicketDto.getTransactionAmount()) * 1000;
 			int amount = BkavInvoiceUtil.calculateAmount(price, 1);
 			invoiceDetailsWS.setQty(1);
 			invoiceDetailsWS.setAmount(amount);
@@ -603,14 +603,19 @@ public class InvoiceServiceImpl implements InvoiceService {
 			itemName = itemName.replace("{2}", year.toString());
 			invoiceDetailsWS.setItemName(itemName);
 			invoiceDetailsWS.setTaxRateID(BkavTaxRateConstant.TAX_BY_10_PERCENTAGE);
-			invoiceDetailsWS.setTaxAmount(BkavInvoiceUtil.calculareTaxAmount(0.1, amount));
+			
+			double temp = 0.1 * amount;
+			double result = Math.round(temp);
+			double taxAmount = Math.round(result/1000) * 1000;
+			int test = (int) taxAmount;
+			invoiceDetailsWS.setTaxAmount(test);
 			listInvoiceDetailsWS.add(invoiceDetailsWS);
 			
 			return listInvoiceDetailsWS;
 		}
 		for (PaymentConfig item : paymentConfigs) {
 			InvoiceDetailsWS invoiceDetailsWS = new InvoiceDetailsWS();
-			int price = BkavInvoiceUtil.calculatePriceBeforeTax(item.getPrice());
+			int price = BkavInvoiceUtil.calculatePriceBeforeTax(item.getPrice()) * 1000;
 			int amount = BkavInvoiceUtil.calculateAmount(price, 1);
 			invoiceDetailsWS.setQty(1);
 			invoiceDetailsWS.setAmount(amount);
@@ -625,7 +630,12 @@ public class InvoiceServiceImpl implements InvoiceService {
 			}
 			
 			invoiceDetailsWS.setTaxRateID(BkavTaxRateConstant.TAX_BY_10_PERCENTAGE);
-			invoiceDetailsWS.setTaxAmount(BkavInvoiceUtil.calculareTaxAmount(0.1, amount));
+			double temp = 0.1 * amount;
+			double result = Math.round(temp);
+			double taxAmount = Math.round(result/1000) * 1000;
+			int test = (int) taxAmount;
+			invoiceDetailsWS.setTaxAmount(test);
+//			invoiceDetailsWS.setTaxAmount(BkavInvoiceUtil.calculareTaxAmount(0.1, amount));
 			listInvoiceDetailsWS.add(invoiceDetailsWS);
 		}
 		
