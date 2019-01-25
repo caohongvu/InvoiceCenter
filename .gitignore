@@ -1,2 +1,4 @@
 
 *.component
+/.settings
+/.project
