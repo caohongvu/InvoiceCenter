@@ -615,6 +615,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 			return listInvoiceDetailsWS;
 		}
 		
+		// For Daily ticket
 		for (PaymentConfig item : paymentConfigs) {
 			InvoiceDetailsWS invoiceDetailsWS = new InvoiceDetailsWS();
 			int price = BkavInvoiceUtil.calculatePriceBeforeTax(item.getPrice()) * 1000;
