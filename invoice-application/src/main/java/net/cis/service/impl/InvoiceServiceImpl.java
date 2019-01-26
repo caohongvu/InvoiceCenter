@@ -586,7 +586,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		// For Auto Job
 		if (bkavTicketDto.getType() != null && bkavTicketDto.getType().equals("MONTHLY_AUTO")) {
 			InvoiceDetailsWS invoiceDetailsWS = new InvoiceDetailsWS();
-			int price = BkavInvoiceUtil.calculatePriceBeforeTax((int)bkavTicketDto.getTransactionAmount()) * 1000;
+			int price = BkavInvoiceUtil.calculatePriceBeforeTax((int)bkavTicketDto.getTransactionAmount());
 			int amount = BkavInvoiceUtil.calculateAmount(price, 1);
 			invoiceDetailsWS.setQty(1);
 			invoiceDetailsWS.setAmount(amount);
@@ -607,7 +607,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 			
 			double temp = 0.1 * amount;
 			double result = Math.round(temp);
-			double tempAmount = Math.round(result/1000) * 1000;
+			double tempAmount = Math.round(result);
 			int taxAmount = (int) tempAmount;
 			invoiceDetailsWS.setTaxAmount(taxAmount);
 			listInvoiceDetailsWS.add(invoiceDetailsWS);
@@ -618,7 +618,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		// For Daily ticket
 		for (PaymentConfig item : paymentConfigs) {
 			InvoiceDetailsWS invoiceDetailsWS = new InvoiceDetailsWS();
-			int price = BkavInvoiceUtil.calculatePriceBeforeTax(item.getPrice()) * 1000;
+			int price = BkavInvoiceUtil.calculatePriceBeforeTax(item.getPrice());
 			int amount = BkavInvoiceUtil.calculateAmount(price, 1);
 			invoiceDetailsWS.setQty(1);
 			invoiceDetailsWS.setAmount(amount);
@@ -635,7 +635,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 			invoiceDetailsWS.setTaxRateID(BkavTaxRateConstant.TAX_BY_10_PERCENTAGE);
 			double temp = 0.1 * amount;
 			double result = Math.round(temp);
-			double tempAmount = Math.round(result/1000) * 1000;
+			double tempAmount = Math.round(result);
 			int taxAmount = (int) tempAmount;
 			invoiceDetailsWS.setTaxAmount(taxAmount);
 			listInvoiceDetailsWS.add(invoiceDetailsWS);
