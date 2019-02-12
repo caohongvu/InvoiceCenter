@@ -287,4 +287,25 @@ public class CisInvoiceEndpoint {
 		
 		return response;
 	}
+	
+	@RequestMapping(value = "/tax_code/check", method = RequestMethod.POST)
+	@ResponseBody
+	public ResponseDto checkTaxcode(HttpServletRequest request, @RequestParam("taxCode") String taxCode, 
+									@RequestParam("providerId") long providerId) throws Exception {
+		
+		ResponseDto response = new ResponseDto();
+		CompanyInforDto dto = invoiceService.checkTaxcode(taxCode, providerId);
+		if (dto != null) {
+			response.setData(dto);
+			response.setError(new ResponseError(HttpServletResponse.SC_OK, ""));
+		}
+		response.setError(new ResponseError(HttpServletResponse.SC_BAD_GATEWAY, ""));
+		response.setData(null);
+		
+		return response;
+	}
+	
+	
+	
+	
 }

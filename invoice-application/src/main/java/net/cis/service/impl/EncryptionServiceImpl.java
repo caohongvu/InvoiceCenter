@@ -65,7 +65,8 @@ public class EncryptionServiceImpl implements EncryptionService {
 
 		decodeKey = key;
 		decodeIvy = ivParameterSpec;
-
+		System.out.println("Key khi Encrypt: " + key.toString());
+		System.out.println("Ivy khi Encrypt: " + ivParameterSpec.toString());
 		Cipher cipher = Cipher.getInstance(BkavConfigurationConstant.CIS_BKAV_ALGORITHM);
 		cipher.init(Cipher.ENCRYPT_MODE, key, ivParameterSpec);
 
@@ -116,6 +117,9 @@ public class EncryptionServiceImpl implements EncryptionService {
 		Key key = decodeKey;
 		IvParameterSpec ivParameterSpec = decodeIvy;
 
+		System.out.println("Key khi Encrypt: " + key.toString());
+		System.out.println("Ivy khi Encrypt: " + ivParameterSpec.toString());
+		
 		Cipher cipher = Cipher.getInstance(BkavConfigurationConstant.CIS_BKAV_ALGORITHM);
 		cipher.init(Cipher.DECRYPT_MODE, key, ivParameterSpec);
 

@@ -29,7 +29,5 @@ public interface EInvoiceService {
     
     EInvoiceEntity getByTicketIdAndTranId(String ticketId, String tranId);
     
-    
-    
 }
  

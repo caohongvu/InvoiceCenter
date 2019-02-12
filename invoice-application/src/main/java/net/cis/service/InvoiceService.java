@@ -38,6 +38,8 @@ public interface InvoiceService {
     
     int getInvoiceStatus(EInvoiceEntity invoice) throws Exception;
     
+    CompanyInforDto checkTaxcode(String taxcode, long providerId) throws Exception;
+    
     BkavResult getInvoiceHistory(String invoiceGUID) throws Exception;
     
     Invoice prepareInvoiceData(BkavTicketDto bkavTicketDto);

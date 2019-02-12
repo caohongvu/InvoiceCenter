@@ -107,6 +107,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 	 	CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(companyId);
 	 	String encryptedCommandData = encryptionService.doEncryptedCommandData(commandDataEntity, companyKeyEntity.getPartnerToken());
 		
+	 	System.out.println("Encrypt: " + encryptedCommandData);
 		BkavRequest bkavRequest = new BkavRequest();
 		bkavRequest.setPartnerGUID(companyKeyEntity.getPartnerGuid());
 		bkavRequest.setCommandData(encryptedCommandData);
@@ -117,7 +118,8 @@ public class InvoiceServiceImpl implements InvoiceService {
 		bkavResponse = bkavExecCommand.doExecCommand(bkavRequest);
 	
 		String decryptedResult = bkavResponse.getDecryptedResult();
-		String result = encryptionService.doDecryptedCommamdData(decryptedResult, companyKeyEntity.getPartnerToken());
+		System.out.println("Decrypt: " + decryptedResult);
+		String result = encryptionService.doDecryptedCommamdData(decryptedResult.trim(), companyKeyEntity.getPartnerToken());
 		
 		// Parse to Object
 		JSONObject jsonObject = new JSONObject(result);
@@ -200,6 +202,54 @@ public class InvoiceServiceImpl implements InvoiceService {
 		return invoiceStatus;
 	}
 	
+	@Override
+	public CompanyInforDto checkTaxcode(String taxcode, long providerId) throws Exception {
+		CompanyKeyEntity companyKeyEntity = companyKeyService.findByCompanyId(providerId);	
+	 	String partnerToken = companyKeyEntity.getPartnerToken();
+		// Prepare Command Data
+		CommandDataEntity commandDataEntity = prepareDataForGettingCompanyInformationByTaxCode(taxcode);
+		
+		// Encrypted Command Data
+		String encryptedCommandData = encryptionService.doEncryptedCommandData(commandDataEntity, partnerToken);
+		
+		// Call BKAV Third Party 
+		BkavRequest bkavRequest = new BkavRequest();
+		bkavRequest.setPartnerGUID(companyKeyEntity.getPartnerGuid());
+		bkavRequest.setCommandData(encryptedCommandData);
+		bkavRequest.setUrl(configurationCache.get("URL"));
+		
+		BkavResponse bkavResponse = new BkavResponse();
+		bkavResponse = bkavExecCommand.doExecCommand(bkavRequest);
+		
+		// Receive Response and Decrypted Response Data
+		String decryptedResult = bkavResponse.getDecryptedResult();
+		String result = encryptionService.doDecryptedCommamdData(decryptedResult, partnerToken);
+		
+		// Parse to Object
+		JSONObject jsonObject = new JSONObject(result);
+		int status = (int) jsonObject.get("Status");
+		boolean isOk = jsonObject.getBoolean("isOk");
+		boolean isError = jsonObject.getBoolean("isError");
+		
+		String strObject = jsonObject.get("Object").toString();
+		if (status == 0 && isOk == true && isError == false) {
+			// Parse result to Company Object
+			JSONObject jsonCompany = new JSONObject(strObject);
+			
+			CompanyInforDto companyInforDto = new CompanyInforDto();
+			companyInforDto.setAlternativeAddress(jsonCompany.getString("DiaChiGiaoDichPhu"));
+			companyInforDto.setCompanyName(jsonCompany.getString("TenChinhThuc"));
+			companyInforDto.setOperationStatus(jsonCompany.getString("TrangThaiHoatDong"));
+			companyInforDto.setPrimaryAddress(jsonCompany.getString("DiaChiGiaoDichChinh"));
+			companyInforDto.setTaxCode(jsonCompany.getString("MaSoThue"));
+			
+			return companyInforDto;
+		}
+		
+		return null;
+		
+	}
+
 	@Override
 	public boolean cancelInvoice(String invoiceGUID) throws Exception {
 		boolean isCanceled = false;
@@ -830,6 +880,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		commandObject.setPartnerInvoiceStringID(bkavTicketDto.getPartnerInvoiceStringId());
 		commandObject.setListInvoiceAttachFileWS(prepareInvoiceAttachFileWS());
 		commandObject.setListInvoiceDetailsWS(prepareListInvoiceDetailsWS(bkavTicketDto));
+		commandObject.setInvoiceAction(4);
 		
 		listCommandObject.add(commandObject);
 
@@ -861,7 +912,6 @@ public class InvoiceServiceImpl implements InvoiceService {
 		invoice.setInvoiceDate(str);
 		invoice.setInvoiceForm(BkavConfigurationConstant.INVOICE_FORM);
 		invoice.setInvoiceNo(0);
-		
 		invoice.setInvoiceSerial(BkavConfigurationConstant.INVOICE_SERIAL);
 		invoice.setInvoiceTypeID(BkavConfigurationConstant.INVOICE_TYPE_ID);
 		invoice.setNote(BkavConfigurationConstant.INVOICE_NOTE);
