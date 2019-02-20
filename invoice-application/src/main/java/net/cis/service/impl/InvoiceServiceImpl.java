@@ -913,6 +913,11 @@ public class InvoiceServiceImpl implements InvoiceService {
 		invoice.setInvoiceForm(BkavConfigurationConstant.INVOICE_FORM);
 		invoice.setInvoiceNo(0);
 		invoice.setInvoiceSerial(BkavConfigurationConstant.INVOICE_SERIAL);
+		if (bkavTicketDto.getProviderId() == 411) {
+			// Cong ty 901, set lại mẫu hóa đơn và số hóa đơn
+			invoice.setInvoiceSerial("AA/18E");
+			invoice.setInvoiceForm("01GTKT0/002");
+		}
 		invoice.setInvoiceTypeID(BkavConfigurationConstant.INVOICE_TYPE_ID);
 		invoice.setNote(BkavConfigurationConstant.INVOICE_NOTE);
 		invoice.setOriginalInvoiceIdentify(BkavConfigurationConstant.ORIGINAL_INVOICE_IDENTIFY);
